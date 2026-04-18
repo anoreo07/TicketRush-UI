@@ -14,19 +14,19 @@ export default function TopNavBar() {
         <div className="hidden md:flex gap-10 items-center font-manrope font-semibold text-sm tracking-tight">
           <a
             className="text-gray-700 hover:text-[#301ec9] transition-colors"
-            href="#"
+            href="/"
           >
             Trang chủ
           </a>
           <a
-            className="text-[#301ec9] border-b-2 border-[#301ec9] pb-1"
+            className="text-gray-700 hover:text-[#301ec9] transition-colors"
             href="#"
           >
             Sự kiện
           </a>
           <a
             className="text-gray-700 hover:text-[#301ec9] transition-colors"
-            href="#"
+            href="/tickets"
           >
             Vé của tôi
           </a>

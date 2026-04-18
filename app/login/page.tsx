@@ -1,16 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { LoginForm } from "@/app/components/auth/LoginForm";
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
   return (
     <main className="min-h-screen flex flex-col md:flex-row">
       {/* Left Section - Hidden on Mobile */}
@@ -130,85 +122,7 @@ export default function LoginPage() {
             </div>
 
             {/* Login Form */}
-            <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-              {/* Email Input */}
-              <div className="space-y-2">
-                <label
-                  className="block text-sm font-semibold text-[#484554] ml-1"
-                  htmlFor="email"
-                >
-                  Địa chỉ Email
-                </label>
-                <input
-                  className="w-full px-5 py-3.5 rounded-xl border border-[#c9c4d7] focus:border-[#301ec9] focus:ring-2 focus:ring-[#301ec9]/20 transition-all bg-white text-[#191c1e]"
-                  id="email"
-                  placeholder="name@company.com"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              {/* Password Input */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center ml-1">
-                  <label
-                    className="block text-sm font-semibold text-[#484554]"
-                    htmlFor="password"
-                  >
-                    Mật khẩu
-                  </label>
-                  <a
-                    className="text-sm font-bold text-[#301ec9] hover:underline"
-                    href="#"
-                  >
-                    Quên mật khẩu?
-                  </a>
-                </div>
-                <div className="relative">
-                  <input
-                    className="w-full px-5 py-3.5 rounded-xl border border-[#c9c4d7] focus:border-[#301ec9] focus:ring-2 focus:ring-[#301ec9]/20 transition-all bg-white text-[#191c1e]"
-                    id="password"
-                    placeholder="••••••••"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c9c4d7] hover:text-[#797586] transition-colors"
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    <Eye className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Remember Me */}
-              <div className="flex items-center gap-3 ml-1">
-                <input
-                  className="w-5 h-5 rounded border-[#c9c4d7] text-[#301ec9] focus:ring-[#301ec9]/20 cursor-pointer"
-                  id="remember"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <label
-                  className="text-sm font-medium text-[#484554] cursor-pointer"
-                  htmlFor="remember"
-                >
-                  Ghi nhớ đăng nhập
-                </label>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                className="w-full py-4 bg-gradient-to-r from-[#301ec9] to-[#5700bf] text-white rounded-full font-bold text-lg shadow-[0_20px_40px_rgba(48,30,201,0.15)] hover:shadow-[0_20px_40px_rgba(48,30,201,0.25)] hover:scale-[1.01] active:scale-[0.98] transition-all"
-                type="submit"
-              >
-                Đăng nhập
-              </button>
-            </form>
+            <LoginForm />
 
             {/* Sign Up Link */}
             <div className="pt-6 text-center">

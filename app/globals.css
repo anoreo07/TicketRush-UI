@@ -58,3 +58,16 @@ p, span {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
+
+/* Seat Grid Styles */
+.seat-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .seat-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
