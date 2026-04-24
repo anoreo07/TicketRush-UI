@@ -1,42 +1,215 @@
 /**
- * Event API Endpoints
+ * Events API Service
+ * Quản lý tất cả API calls liên quan đến events
  */
 
-import { apiFetch } from './client';
+import { apiFetch, apiAuthFetch } from './client';
 
+/**
+ * Event Types
+ */
 export interface Event {
   id: string;
   title: string;
   description: string;
-  date: string;
+  event_date: string; // ISO datetime
   location: string;
-  price: number;
-  image: string;
+  venue: string;
+  image_url: string;
+  price_range: {
+    min: number;
+    max: number;
+  };
+  total_seats: number;
+  available_seats: number;
+  status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
 }
 
-export interface GetEventsResponse {
-  events: Event[];
-  total: number;
+export interface EventDetail extends Event {
+  categories: string[];
+  organizer: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
+  rules: string[];
+  refund_policy: string;
+}
+
+export interface Seat {
+  id: string;
+  seat_number: string;
+  row: string;
+  col: number;
+  zone: 'vip' | 'standard' | 'economy';
+  price: number;
+  status: 'available' | 'locked' | 'sold';
+  locked_until?: string; // ISO datetime
+  locked_by_user?: boolean;
+}
+
+export interface SeatMap {
+  event_id: string;
+  total_seats: number;
+  available_seats: number;
+  zones: {
+    [key: string]: {
+      name: string;
+      price: number;
+      seats: Seat[];
+    };
+  };
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
   page: number;
-  pageSize: number;
+  limit: number;
+  total: number;
+  pages: number;
 }
 
 /**
- * Event API Methods
+ * Events API Methods
  */
-export const eventApi = {
-  getAll: (page?: number, pageSize?: number) =>
-    apiFetch<GetEventsResponse>('/events', {
+export const eventsApi = {
+  /**
+   * Get all events with pagination
+   * GET /api/v1/events?page=1&limit=12&status=published
+   */
+  getAll: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    category?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.category) queryParams.append('category', params.category);
+
+    const query = queryParams.toString();
+    return apiFetch<PaginatedResponse<Event>>(
+      `/events${query ? '?' + query : ''}`,
+      { method: 'GET' }
+    );
+  },
+
+  /**
+   * Get event by ID
+   * GET /api/v1/events/:id
+   */
+  getById: (eventId: string) =>
+    apiFetch<EventDetail>(`/events/${eventId}`, {
       method: 'GET',
     }),
 
-  getById: (id: string) =>
-    apiFetch<Event>(`/events/${id}`, {
+  /**
+   * Get seat map for event
+   * GET /api/v1/events/:id/seats
+   */
+  getSeats: (eventId: string) =>
+    apiFetch<SeatMap>(`/events/${eventId}/seats`, {
       method: 'GET',
     }),
 
-  search: (query: string) =>
-    apiFetch<GetEventsResponse>(`/events/search?q=${query}`, {
+  /**
+   * Get available seats count
+   * GET /api/v1/events/:id/available-seats
+   */
+  getAvailableSeatsCount: (eventId: string) =>
+    apiFetch<{ available: number; total: number }>(
+      `/events/${eventId}/available-seats`,
+      { method: 'GET' }
+    ),
+
+  /**
+   * Search events
+   * GET /api/v1/events/search?q=concert
+   */
+  search: (query: string, filters?: { category?: string; date?: string }) => {
+    const params = new URLSearchParams({ q: query });
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.date) params.append('date', filters.date);
+
+    return apiFetch<PaginatedResponse<Event>>(
+      `/events/search?${params.toString()}`,
+      { method: 'GET' }
+    );
+  },
+
+  /**
+   * Get trending events
+   * GET /api/v1/events/trending
+   */
+  getTrending: (limit = 6) =>
+    apiFetch<Event[]>(`/events/trending?limit=${limit}`, {
       method: 'GET',
+    }),
+};
+
+/**
+ * Admin Events API
+ */
+export const adminEventsApi = {
+  /**
+   * Create new event
+   * POST /api/v1/admin/events
+   */
+  create: (payload: {
+    title: string;
+    description: string;
+    event_date: string;
+    location: string;
+    venue: string;
+    image_url: string;
+    total_seats: number;
+    categories?: string[];
+  }) =>
+    apiAuthFetch<Event>('/admin/events', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  /**
+   * Update event
+   * PATCH /api/v1/admin/events/:id
+   */
+  update: (eventId: string, payload: Partial<Event>) =>
+    apiAuthFetch<Event>(`/admin/events/${eventId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  /**
+   * Publish event
+   * PATCH /api/v1/admin/events/:id/publish
+   */
+  publish: (eventId: string) =>
+    apiAuthFetch<Event>(`/admin/events/${eventId}/publish`, {
+      method: 'PATCH',
+    }),
+
+  /**
+   * Cancel event
+   * PATCH /api/v1/admin/events/:id/cancel
+   */
+  cancel: (eventId: string) =>
+    apiAuthFetch<Event>(`/admin/events/${eventId}/cancel`, {
+      method: 'PATCH',
+    }),
+
+  /**
+   * Delete event
+   * DELETE /api/v1/admin/events/:id
+   */
+  delete: (eventId: string) =>
+    apiAuthFetch(`/admin/events/${eventId}`, {
+      method: 'DELETE',
     }),
 };

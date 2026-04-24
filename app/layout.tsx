@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Be_Vietnam_Pro, Geist } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { EventBookingClientWrapper } from "@/app/components/providers/EventBookingClientWrapper";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -43,7 +44,9 @@ export default function RootLayout({
       <body
         className={`${manrope.variable} ${beVietnamPro.variable} bg-surface text-on-surface min-h-screen flex flex-col`}
       >
-        {children}
+        <EventBookingClientWrapper>
+          {children}
+        </EventBookingClientWrapper>
       </body>
     </html>
   );

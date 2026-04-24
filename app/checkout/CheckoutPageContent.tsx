@@ -3,22 +3,17 @@
 import { EventInfoCard } from '@/app/components/payment/EventInfoCard';
 import { PaymentMethods } from '@/app/components/payment/PaymentMethods';
 import { PaymentSummary } from '@/app/components/payment/PaymentSummary';
-import Link from 'next/link';
+import ProgressStepper from '@/app/components/checkout/ProgressStepper';
 
 export default function CheckoutPageContent() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
+        {/* Progress Stepper */}
+        <ProgressStepper currentStep={2} steps={['Chọn vé', 'Thanh toán', 'Hoàn tất']} />
+
         {/* Header Section */}
         <div className="mb-12">
-          {/* Breadcrumb & Back Button */}
-          <div className="flex items-center gap-2 mb-8">
-            <Link href="/booking" className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors">
-              <span className="material-symbols-outlined text-xl">arrow_back</span>
-              <span className="text-sm font-medium">Quay lại</span>
-            </Link>
-          </div>
-
           {/* Page Title */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-headline font-black text-gray-900 mb-2">

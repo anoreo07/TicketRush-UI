@@ -1,53 +1,41 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Bell, User } from "lucide-react";
+'use client';
 
 export default function TopNavBar() {
   return (
-    <nav className="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-[100]">
-      <div className="flex justify-between items-center w-full px-8 py-3 max-w-7xl mx-auto">
-        <div className="text-xl font-black text-[#301ec9] tracking-tighter cursor-pointer">
-          TicketRush
-        </div>
-        <div className="hidden md:flex gap-10 items-center font-manrope font-semibold text-sm tracking-tight">
-          <a
-            className="text-gray-700 hover:text-[#301ec9] transition-colors"
-            href="/"
-          >
-            Trang chủ
-          </a>
-          <a
-            className="text-gray-700 hover:text-[#301ec9] transition-colors"
-            href="#"
-          >
-            Sự kiện
-          </a>
-          <a
-            className="text-gray-700 hover:text-[#301ec9] transition-colors"
-            href="/tickets"
-          >
-            Vé của tôi
-          </a>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="relative hidden lg:block w-64">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border-none rounded-full text-xs font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-[#301ec9]/20"
-              placeholder="Tìm kiếm sự kiện..."
-              type="text"
-            />
+    <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_20px_40px_rgba(48,30,201,0.06)]">
+      <div className="flex justify-between items-center w-full px-8 py-4 max-w-7xl mx-auto">
+        <div className="flex items-center gap-8">
+          <span className="text-2xl font-black text-indigo-700 dark:text-indigo-400 tracking-tighter brand-font">
+            TicketRush
+          </span>
+          <div className="hidden md:flex items-center gap-6 font-['Manrope'] font-semibold tracking-tight">
+            <a
+              className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+              href="/"
+            >
+              Trang chủ
+            </a>
+            <a
+              className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+              href="/"
+            >
+              Sự kiện
+            </a>
+            <a
+              className="text-indigo-700 dark:text-indigo-400 border-b-2 border-indigo-700 pb-1"
+              href="/tickets"
+            >
+              Vé của tôi
+            </a>
           </div>
-          <div className="flex gap-4">
-            <Button variant="ghost" size="icon" className="text-gray-600 hover:text-[#301ec9]">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-gray-600 hover:text-[#301ec9]">
-              <User className="h-5 w-5" />
-            </Button>
-          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <button className="p-2 text-slate-600 hover:scale-95 duration-200">
+            <span className="material-symbols-outlined">notifications</span>
+          </button>
+          <button className="p-2 text-slate-600 hover:scale-95 duration-200">
+            <span className="material-symbols-outlined">account_circle</span>
+          </button>
         </div>
       </div>
     </nav>
