@@ -1,24 +1,19 @@
-import TopNavBar from "./components/TopNavBar";
-import HeroSection from "./components/HeroSection";
-import SearchFilterBar from "./components/SearchFilterBar";
-import EventSection from "./components/EventSection";
-import RecommendedCarousel from "./components/RecommendedCarousel";
-import EventSkeleton from "./components/EventSkeleton";
-import Footer from "./components/Footer";
+import TopNavBar from '@/app/components/TopNavBar';
+import Footer from '@/app/components/Footer';
+import LandingPageContent from '@/app/components/LandingPageContent';
 
-export default function Home() {
+export const metadata = {
+  title: 'TicketRush - Kiến tạo khoảnh khắc, Kết nối đam mê',
+  description: 'Nền tảng quản lý và đặt vé sự kiện chuyên nghiệp',
+};
+
+export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen w-full">
-      <TopNavBar />
-      <div className="flex-1">
-        <HeroSection />
-        <SearchFilterBar />
-        <main className="py-16 space-y-20">
-          <EventSection />
-          <RecommendedCarousel />
-          <EventSkeleton />
-        </main>
-      </div>
+    <div className="flex flex-col min-h-screen w-full bg-surface">
+      <TopNavBar hiddenLinks={true} />
+      <main className="flex-1">
+        <LandingPageContent />
+      </main>
       <Footer />
     </div>
   );
