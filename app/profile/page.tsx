@@ -1,9 +1,108 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import TopNavBar from '@/app/components/TopNavBar';
 import Footer from '@/app/components/Footer';
+import { authApi, bookingApi, UserResponse, TicketResponse } from '@/lib/api';
+import { getAuthToken } from '@/lib/api/client';
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const [user, setUser] = useState<UserResponse | null>(null);
+  const [tickets, setTickets] = useState<TicketResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Check if token exists
+        const token = getAuthToken();
+        if (!token) {
+          setError('Vui lòng đăng nhập lại');
+          router.push('/login');
+          return;
+        }
+
+        // Load user info
+        const userData = await authApi.getCurrentUser();
+        setUser(userData);
+
+        // Load tickets
+        try {
+          const ticketsData = await bookingApi.getMyTickets();
+          setTickets(ticketsData || []);
+        } catch (ticketErr) {
+          console.warn('Failed to load tickets:', ticketErr);
+          // Don't fail if tickets fail to load
+          setTickets([]);
+        }
+      } catch (err: any) {
+        console.error('Failed to load profile:', err);
+        const errorMsg = err?.message || 'Không thể tải thông tin hồ sơ';
+        setError(errorMsg);
+        
+        // Redirect to login if token expired
+        if (err?.statusCode === 401 || errorMsg.includes('Token')) {
+          setTimeout(() => router.push('/login'), 1000);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [router]);
+
+  const ticketCount = tickets.length;
+  const upcomingTickets = tickets.filter((t) => {
+    // Assuming tickets have some date field to check if upcoming
+    return true; // Simplified for now
+  }).length;
+
+  if (isLoading) {
+    return (
+      <div className="bg-surface text-on-surface min-h-screen flex flex-col">
+        <TopNavBar />
+        <main className="flex-grow pt-20 pb-16 px-6 max-w-7xl mx-auto w-full">
+          <div className="animate-pulse space-y-4">
+            <div className="bg-gray-300 h-48 rounded-2xl"></div>
+            <div className="bg-gray-300 h-64 rounded-2xl"></div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-surface text-on-surface min-h-screen flex flex-col">
+        <TopNavBar />
+        <main className="flex-grow pt-20 pb-16 px-6">
+          <p className="text-red-500">{error}</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="bg-surface text-on-surface min-h-screen flex flex-col">
+        <TopNavBar />
+        <main className="flex-grow pt-20 pb-16 px-6">
+          <p>Không tìm thấy thông tin người dùng</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface text-on-surface min-h-screen flex flex-col">
       <TopNavBar />
@@ -17,7 +116,7 @@ export default function ProfilePage() {
               <img
                 alt="Avatar"
                 className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxQCOrqo1DHxIB7nvYPslFFakIxJiVt6Hf5A-dU3Hv6qAO20y4WkDYgxL_Awro8I4yqCf_D_aywOMJrO-pya6R4goi8Rq4wnVKtf2UtaTDWgcaJf1qJ1CFb-6Pv38qeVyck86pgEM-lsszDjnRxsToCh9Acq0jlR2mu1ynKjBw3QPmWKQ_anfx66om6ZH0ppZocxry7E4H_XwAqBOPFyGehDLmbRrYlaxljwdHjfWw16eYMnZ8hDlVCG64JCy6kyMyjFIxqS2tYYI"
+                src={user.avatar_url || "/avatar.png"}
               />
             </div>
             <button className="absolute -bottom-1 -right-1 bg-white p-2.5 rounded-full shadow-lg text-primary hover:bg-primary-fixed transition-colors border-2 border-white">
@@ -27,24 +126,24 @@ export default function ProfilePage() {
           <div className="flex-grow text-center md:text-left z-10">
             <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
               <h1 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight">
-                Nguyễn Minh Tuấn
+                {user.full_name}
               </h1>
               <span className="inline-flex items-center px-4 py-1.5 rounded-full text-[11px] font-bold bg-primary-fixed text-on-primary-fixed uppercase tracking-wider">
-                Khách hàng thân thiết
+                {user.role === 'customer' ? 'Khách hàng' : user.role}
               </span>
             </div>
             <p className="text-on-surface-variant flex items-center justify-center md:justify-start gap-2 text-sm">
               <span className="material-symbols-outlined text-base">calendar_today</span>
-              Thành viên từ tháng 1, 2024
+              Thành viên từ {new Date(user.created_at).toLocaleDateString('vi-VN')}
             </p>
           </div>
           <div className="hidden lg:flex gap-6 ml-auto">
             <div className="bg-surface-container-low p-5 rounded-2xl text-center min-w-[130px]">
-              <span className="block text-3xl font-black text-primary">12</span>
+              <span className="block text-3xl font-black text-primary">{ticketCount}</span>
               <span className="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider">Vé đã mua</span>
             </div>
             <div className="bg-surface-container-low p-5 rounded-2xl text-center min-w-[130px]">
-              <span className="block text-3xl font-black text-tertiary">02</span>
+              <span className="block text-3xl font-black text-tertiary">{upcomingTickets}</span>
               <span className="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider">Sắp tới</span>
             </div>
           </div>
@@ -111,7 +210,7 @@ export default function ProfilePage() {
                     Họ và tên
                   </label>
                   <p className="text-base font-bold border-b border-surface-container-high pb-2.5">
-                    Nguyễn Minh Tuấn
+                    {user.full_name}
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -119,7 +218,7 @@ export default function ProfilePage() {
                     Email
                   </label>
                   <p className="text-base font-bold border-b border-surface-container-high pb-2.5">
-                    tuan.nguyen@email.com
+                    {user.email}
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -127,31 +226,23 @@ export default function ProfilePage() {
                     Số điện thoại
                   </label>
                   <p className="text-base font-bold border-b border-surface-container-high pb-2.5">
-                    +84 901 234 567
+                    {user.phone || 'N/A'}
                   </p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">
-                    Giới tính
+                    Vai trò
                   </label>
                   <p className="text-base font-bold border-b border-surface-container-high pb-2.5">
-                    Nam
+                    {user.role === 'customer' ? 'Khách hàng' : user.role}
                   </p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">
-                    Ngày sinh
+                    Ngày tham gia
                   </label>
                   <p className="text-base font-bold border-b border-surface-container-high pb-2.5">
-                    15/05/1995
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">
-                    Quốc tịch
-                  </label>
-                  <p className="text-base font-bold border-b border-surface-container-high pb-2.5">
-                    Việt Nam
+                    {new Date(user.created_at).toLocaleDateString('vi-VN')}
                   </p>
                 </div>
               </div>

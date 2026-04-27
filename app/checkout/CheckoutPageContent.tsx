@@ -1,11 +1,46 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { EventInfoCard } from '@/app/components/payment/EventInfoCard';
 import { PaymentMethods } from '@/app/components/payment/PaymentMethods';
 import { PaymentSummary } from '@/app/components/payment/PaymentSummary';
 import ProgressStepper from '@/app/components/checkout/ProgressStepper';
+import { useBookingContext } from '@/lib/context/BookingContext';
 
 export default function CheckoutPageContent() {
+  const router = useRouter();
+  const { booking, isLoading, error, confirmBooking } = useBookingContext();
+  const [selectedPayment, setSelectedPayment] = useState('credit_card');
+
+  useEffect(() => {
+    // Redirect to booking if no booking exists
+    if (!booking) {
+      router.push('/booking');
+    }
+  }, [booking, router]);
+
+  const handleConfirmPayment = async () => {
+    try {
+      await confirmBooking(selectedPayment);
+      // Redirect to success/tickets page
+      router.push('/tickets');
+    } catch (err) {
+      console.error('Payment confirmation failed:', err);
+    }
+  };
+
+  if (!booking) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải thông tin thanh toán...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">

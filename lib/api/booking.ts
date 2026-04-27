@@ -98,6 +98,14 @@ export const bookingApi = {
     }),
 
   /**
+   * Get user's tickets - GET /users/me/tickets
+   */
+  getMyTickets: () =>
+    apiAuthFetch<TicketResponse[]>('/users/me/tickets', {
+      method: 'GET',
+    }),
+
+  /**
    * Cancel booking
    */
   cancel: (bookingId: string) =>

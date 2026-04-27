@@ -2,7 +2,7 @@
  * Auth API Endpoints
  */
 
-import { apiFetch } from './client';
+import { apiFetch, apiAuthFetch } from './client';
 
 export interface RegisterRequest {
   email: string;
@@ -25,30 +25,69 @@ export interface AuthResponse {
   };
 }
 
+export interface UserResponse {
+  id: string;
+  email: string;
+  full_name: string;
+  phone?: string;
+  avatar_url?: string;
+  role: string;
+  created_at: string;
+}
+
 /**
- * Register - Đăng ký người dùng
- * POST /auth/register
+ * Auth API Methods
  */
 export const authApi = {
+  /**
+   * Register - POST /auth/register
+   */
   register: (payload: RegisterRequest) =>
     apiFetch<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
+  /**
+   * Login - POST /auth/login
+   */
   login: (payload: LoginRequest) =>
     apiFetch<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
-  logout: () =>
-    apiFetch('/auth/logout', {
+  /**
+   * Get Current User - GET /auth/me
+   * Requires token in Authorization header
+   */
+  getCurrentUser: () =>
+    apiAuthFetch<UserResponse>('/auth/me', {
+      method: 'GET',
+    }),
+
+  /**
+   * Change Password - POST /auth/change-password
+   */
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiAuthFetch('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
+  /**
+   * Delete Account - POST /auth/delete-account
+   */
+  deleteAccount: () =>
+    apiAuthFetch('/auth/delete-account', {
       method: 'POST',
     }),
 
-  getCurrentUser: () =>
-    apiFetch('/auth/me', {
-      method: 'GET',
+  /**
+   * Logout - POST /auth/logout
+   */
+  logout: () =>
+    apiAuthFetch('/auth/logout', {
+      method: 'POST',
     }),
 };

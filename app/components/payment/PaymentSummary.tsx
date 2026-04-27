@@ -1,17 +1,39 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { mockPriceBreakdown, formatCurrency } from '@/lib/mock/booking-data';
+import { useBookingContext } from '@/lib/context/BookingContext';
 
 export const PaymentSummary = () => {
+  const router = useRouter();
+  const { booking, isLoading, error, confirmBooking } = useBookingContext();
+  const [selectedPayment, setSelectedPayment] = useState('credit_card');
+
+  const handlePayment = async () => {
+    try {
+      await confirmBooking(selectedPayment);
+      router.push('/tickets');
+    } catch (err) {
+      console.error('Payment failed:', err);
+    }
+  };
+
   return (
     <aside className="lg:col-span-4 space-y-6">
       <div className="bg-white rounded-3xl p-8 shadow-md border border-gray-200">
         <h3 className="text-lg font-headline font-bold text-gray-800 mb-6">Tóm tắt chi phí</h3>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-3 mb-6 pb-4 border-b border-dashed border-gray-300">
           <div className="flex justify-between items-center text-gray-600">
-            <span className="text-sm">Giá vé (x2)</span>
+            <span className="text-sm">Giá vé (x{booking?.seats?.length || 0})</span>
             <span className="font-medium text-gray-800">{formatCurrency(mockPriceBreakdown.subtotal)}</span>
           </div>
           <div className="flex justify-between items-center text-gray-600">
@@ -46,9 +68,22 @@ export const PaymentSummary = () => {
         </div>
 
         <div className="space-y-4">
-          <button className="w-full bg-purple-600 text-white font-headline font-bold py-4 rounded-full shadow-lg shadow-purple-600/30 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center gap-2">
-            <span>Thanh toán ngay</span>
-            <span className="opacity-70 text-sm font-medium">| {formatCurrency(mockPriceBreakdown.total)}</span>
+          <button 
+            onClick={handlePayment}
+            disabled={isLoading}
+            className="w-full bg-purple-600 text-white font-headline font-bold py-4 rounded-full shadow-lg shadow-purple-600/30 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <span className="material-symbols-outlined animate-spin">loading</span>
+                <span>Đang xử lý...</span>
+              </>
+            ) : (
+              <>
+                <span>Thanh toán ngay</span>
+                <span className="opacity-70 text-sm font-medium">| {formatCurrency(mockPriceBreakdown.total)}</span>
+              </>
+            )}
           </button>
           <p className="text-xs text-center text-gray-500 leading-relaxed px-4">
             Bằng việc nhấn thanh toán, bạn đồng ý với các{' '}

@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Be_Vietnam_Pro, Geist } from "next/font/google";
+import { Manrope, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { EventBookingClientWrapper } from "@/app/components/providers/EventBookingClientWrapper";
-
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const manrope = Manrope({
   variable: "--font-headline",
@@ -34,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={cn("light", "font-sans", geist.variable)}>
+    <html lang="vi" className={cn("light", "font-sans", manrope.variable)}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"

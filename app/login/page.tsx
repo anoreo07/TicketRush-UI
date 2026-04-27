@@ -6,7 +6,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex flex-col md:flex-row">
       {/* Left Section - Hidden on Mobile */}
-      <section className="hidden md:flex md:w-1/2 lg:w-3/5 relative overflow-hidden bg-[#301ec9] items-center justify-center p-12">
+      <section className="hidden md:flex md:w-1/2 lg:w-3/5 relative overflow-hidden bg-[#301ec9] items-center justify-center p-8">
         <div className="absolute inset-0 z-0 opacity-60">
           <img
             alt="Live concert event"
@@ -15,83 +15,83 @@ export default function LoginPage() {
           />
         </div>
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#301ec9]/90 via-[#301ec9]/20 to-transparent"></div>
-        <div className="relative z-20 max-w-xl">
-          <div className="mb-8">
-            <span className="text-[#c3c0ff] bg-[#4a40e0] px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase">
+        <div className="relative z-20 max-w-xl space-y-5 -mt-40">
+          <div className="mb-4">
+            <span className="text-[#c3c0ff] bg-[#4a40e0] px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase">
               Premium Experience
             </span>
           </div>
-          <h1 className="text-5xl lg:text-7xl font-extrabold text-white leading-[1.1] mb-6 tracking-tighter">
+          <h1 className="text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-3 tracking-tighter">
             Trải nghiệm sự kiện đẳng cấp
           </h1>
-          <p className="text-[#c3c0ff] text-xl leading-relaxed font-light">
+          <p className="text-[#c3c0ff] text-base leading-snug font-light">
             Kết nối bạn với những khoảnh khắc nghệ thuật tuyệt vời nhất.
             TicketRush mang đến giải pháp đặt vé thông minh và bảo mật hàng
             đầu.
           </p>
-          <div className="mt-12 flex gap-4">
+          <div className="mt-8 flex gap-3">
             <div className="flex -space-x-3">
               <img
-                className="w-10 h-10 rounded-full border-2 border-white"
+                className="w-8 h-8 rounded-full border-2 border-white"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlnQuSxfha-fDV5GzcQia0Ng2b8XhndgaC_J0uKxaW3KBwjmA3Nz04E3_gEV9nQ89Z88vetfdzyY_g3ziSkWmX75heAUMW9tV3azcZX54_mSJNkM0I_1RdtS2ufYJVN-z3niLis32M2K286a8EsJTzhVCoIasGzrgTsIh_ISC-YJETB26mXYq2WgIOb7uHkvmmfbnvf_MyhthmFZ_AcwUOd4ekVDf6lRhMlFQqWpo2yM27HMphA_XrnjZSkgimS7LaRlTQlyR66oA"
                 alt="User 1"
               />
               <img
-                className="w-10 h-10 rounded-full border-2 border-white"
+                className="w-8 h-8 rounded-full border-2 border-white"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGYUt8eBf-1Wtf7kCd9-xfby28spIED5lGbUkWKnnpmOVSW4NNaxlaDyQxUjQ543fkRtJWWSKUsH7r-Rq7DTKpTH0RuPEsN0mju5oIobJaqpsyIWrUFgsHjTzu4oimmgF7r32Xisdp5h5yto1f5xMVexG44slwoTP4DKsuOdxMvsPndKC3EWUeXSjuop5R-q7DzOjNSW3itTZA8PNOVVGukFcNOlrYBfu4uthkWLnhFEIa8pBFhqSl9z556CeQXXJ-kvt-uFCjTsE"
                 alt="User 2"
               />
               <img
-                className="w-10 h-10 rounded-full border-2 border-white"
+                className="w-8 h-8 rounded-full border-2 border-white"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuJ0V1GtAGL0LdpcymcxXrAOcl56AI4cBdpu1q13fI1syP7sCRGYrfW7yLaLSTHw6sAbP6YKkRq3QKRsDqmMuhUIJOszwt3zbwM2J79ApD9aTGmppDE7ITJWGGqiVpXROmQcs5pk5fkD4Y1xXCWiuOYDyh1fMHUW1H35gh4gI-E5m54I3cvZ05KSPipqJYdY79rzpMt-Toh997qDJ6JMLdoJ3P_NWRzkDLYSviZbAtzH_upA9WgIErZ8_3tuxsZQzteRnr2Z1odzg"
                 alt="User 3"
               />
             </div>
             <div className="text-white">
-              <p className="text-sm font-semibold">+10,000 người dùng</p>
-              <p className="text-xs text-[#c3c0ff]">
+              <p className="text-xs font-semibold">+10,000 người dùng</p>
+              <p className="text-[11px] text-[#c3c0ff]">
                 đã tham gia TicketRush tuần này
               </p>
             </div>
           </div>
         </div>
-        <div className="absolute bottom-8 left-12 z-20 flex items-center gap-2">
-          <span className="text-white/40 text-sm font-medium tracking-tight">
+        <div className="absolute bottom-4 left-8 z-20 flex items-center gap-2">
+          <span className="text-white/40 text-xs font-medium tracking-tight">
             © 2024 TicketRush Inc.
           </span>
         </div>
       </section>
 
       {/* Right Section - Login Form */}
-      <section className="flex-1 bg-[#f7f9fb] flex flex-col justify-center items-center p-6 md:p-12 lg:p-24 relative">
+      <section className="flex-1 bg-[#f7f9fb] flex flex-col justify-center items-center p-4 md:p-8 relative">
         <div className="w-full max-w-md">
-          <div className="mb-12 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 mb-8">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#301ec9] to-[#5700bf] rounded-xl flex items-center justify-center text-white">
+          <div className="mb-8 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 mb-5">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#301ec9] to-[#5700bf] rounded-lg flex items-center justify-center text-white">
                 <svg
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m7 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8m6-1h1v2h-1v-2m-11 13h10v-1H7v1z" />
                 </svg>
               </div>
-              <span className="text-2xl font-black text-[#301ec9] tracking-tighter">
+              <span className="text-xl font-black text-[#301ec9] tracking-tighter">
                 TicketRush
               </span>
             </div>
-            <h2 className="text-3xl font-bold text-[#191c1e] mb-3 tracking-tight">
+            <h2 className="text-2xl font-bold text-[#191c1e] mb-2 tracking-tight">
               Chào mừng trở lại
             </h2>
-            <p className="text-[#484554] font-medium">
+            <p className="text-sm text-[#484554] font-medium">
               Nhập thông tin của bạn để truy cập tài khoản
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Google Login Button */}
-            <button className="w-full flex items-center justify-center gap-3 py-3.5 px-6 rounded-xl border border-[#c9c4d7] bg-white text-[#191c1e] font-semibold hover:bg-[#eceef0] transition-all active:scale-[0.98]">
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <button className="w-full flex items-center justify-center gap-3 py-3 px-6 rounded-lg border border-[#c9c4d7] bg-white text-[#191c1e] font-semibold text-sm hover:bg-[#eceef0] transition-all active:scale-[0.98]">
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"
@@ -113,9 +113,9 @@ export default function LoginPage() {
             </button>
 
             {/* Divider */}
-            <div className="relative flex items-center gap-4">
+            <div className="relative flex items-center gap-3">
               <div className="flex-1 h-[1px] bg-[#c9c4d7]"></div>
-              <span className="text-xs font-bold text-[#797586] uppercase tracking-widest">
+              <span className="text-[10px] font-bold text-[#797586] uppercase tracking-widest">
                 Hoặc dùng Email
               </span>
               <div className="flex-1 h-[1px] bg-[#c9c4d7]"></div>
@@ -125,8 +125,8 @@ export default function LoginPage() {
             <LoginForm />
 
             {/* Sign Up Link */}
-            <div className="pt-6 text-center">
-              <p className="text-[#484554] font-medium">
+            <div className="pt-4 text-center">
+              <p className="text-sm text-[#484554] font-medium">
                 Chưa có tài khoản?
                 <a
                   className="text-[#301ec9] font-bold hover:underline ml-1"
@@ -139,18 +139,18 @@ export default function LoginPage() {
           </div>
 
           {/* Security Info - Hidden on Mobile */}
-          <div className="mt-12 hidden md:block">
-            <div className="bg-[#e2dfff]/30 p-4 rounded-xl flex items-start gap-4 border border-[#e2dfff]/50">
+          <div className="mt-6 hidden md:block">
+            <div className="bg-[#e2dfff]/30 p-3 rounded-lg flex items-start gap-3 border border-[#e2dfff]/50">
               <svg
-                className="w-5 h-5 text-[#301ec9] flex-shrink-0 mt-0.5"
+                className="w-4 h-4 text-[#301ec9] flex-shrink-0 mt-0.5"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
               </svg>
               <div>
-                <p className="text-sm font-bold text-[#3323cc]">Kết nối an toàn</p>
-                <p className="text-xs text-[#3323cc]/80">
+                <p className="text-xs font-bold text-[#3323cc]">Kết nối an toàn</p>
+                <p className="text-[10px] text-[#3323cc]/80 leading-tight">
                   Dữ liệu của bạn được mã hóa theo tiêu chuẩn ngân hàng
                   AES-256.
                 </p>
@@ -161,25 +161,25 @@ export default function LoginPage() {
       </section>
 
       {/* Footer - Mobile Only */}
-      <footer className="md:hidden bg-white py-8 px-6 text-center border-t border-[#c9c4d7]/10">
-        <div className="inline-flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 bg-gradient-to-br from-[#301ec9] to-[#5700bf] rounded flex items-center justify-center text-white">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+      <footer className="md:hidden bg-white py-5 px-4 text-center border-t border-[#c9c4d7]/10">
+        <div className="inline-flex items-center gap-1.5 mb-2">
+          <div className="w-5 h-5 bg-gradient-to-br from-[#301ec9] to-[#5700bf] rounded flex items-center justify-center text-white">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
               <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m7 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8m6-1h1v2h-1v-2m-11 13h10v-1H7v1z" />
             </svg>
           </div>
-          <span className="text-lg font-black text-[#301ec9] tracking-tighter">
+          <span className="text-base font-black text-[#301ec9] tracking-tighter">
             TicketRush
           </span>
         </div>
-        <p className="text-xs text-[#484554] mb-2">
+        <p className="text-[11px] text-[#484554] mb-2">
           © 2024 TicketRush. Trải nghiệm đẳng cấp.
         </p>
-        <div className="flex justify-center gap-4">
-          <a className="text-xs font-bold text-[#797586] hover:text-[#301ec9]" href="#">
+        <div className="flex justify-center gap-3">
+          <a className="text-[10px] font-bold text-[#797586] hover:text-[#301ec9]" href="#">
             Điều khoản
           </a>
-          <a className="text-xs font-bold text-[#797586] hover:text-[#301ec9]" href="#">
+          <a className="text-[10px] font-bold text-[#797586] hover:text-[#301ec9]" href="#">
             Bảo mật
           </a>
         </div>
