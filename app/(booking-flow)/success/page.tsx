@@ -18,7 +18,7 @@ export default function SuccessPage() {
     const interval = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          router.push('/dashboard');
+          router.push('/tickets');
           return 0;
         }
         return prev - 1;
@@ -164,7 +164,7 @@ export default function SuccessPage() {
             {/* Auto-redirect Timer */}
             <div className="pt-4 border-t border-gray-200">
               <p className="text-sm text-gray-600">
-                ⏱️ Tự động chuyển hướng về dashboard sau{' '}
+                ⏱️ Tự động chuyển hướng về trang vé của tôi sau{' '}
                 <span className="font-bold text-gray-900">{countdown}</span>{' '}
                 giây...
               </p>

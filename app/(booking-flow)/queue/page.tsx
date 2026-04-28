@@ -3,236 +3,221 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import TopNavBar from '@/app/components/TopNavBar';
+import Footer from '@/app/components/Footer'; // Sử dụng component có sẵn
+
+// Thông tin sự kiện mô phỏng
+const EVENT_DATA = {
+  title: "VCT Pacific Stage 1 Finals",
+  location: "Nhà thi đấu Quân khu 7, TP. Hồ Chí Minh",
+  date: "25 Th05, 2024",
+  time: "18:00",
+  category: "Esports",
+  imageUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"
+};
 
 export default function QueuePage() {
   const router = useRouter();
-  
-  // Queue simulation state
-  const [queuePosition, setQueuePosition] = useState(45);
-  const [totalInQueue, setTotalInQueue] = useState(128);
+
+  // Logic Hàng chờ từ code cũ của bạn
+  const [queuePosition, setQueuePosition] = useState(10);
+  const [totalInQueue] = useState(2000);
   const [bookingStatus, setBookingStatus] = useState<'processing' | 'completed'>('processing');
   const [elapsedTime, setElapsedTime] = useState(0);
 
-  // Simulate queue movement
   useEffect(() => {
     const interval = setInterval(() => {
       setElapsedTime(prev => prev + 1);
 
-      // Simulate moving up queue every 6 seconds
-      if (elapsedTime % 6 === 0 && queuePosition > 1) {
-        setQueuePosition(prev => Math.max(1, prev - 1));
+      // Mô phỏng di chuyển hàng chờ mỗi 5 giây
+      if (elapsedTime % 5 === 0 && queuePosition > 1) {
+        setQueuePosition(prev => Math.max(1, prev - Math.floor(Math.random() * 5 + 1)));
       }
 
-      // Simulate completion at position 1
+      // Xử lý khi đến lượt
       if (queuePosition === 1 && bookingStatus === 'processing') {
-        setTimeout(() => {
-          setBookingStatus('completed');
-          // Auto redirect to booking after 2 seconds
-          setTimeout(() => {
-            const eventId = sessionStorage.getItem('bookingEventId');
-            if (eventId) {
-              router.push(`/booking`);
-            }
-          }, 2000);
-        }, 2000);
+        setBookingStatus('completed');
+        const timeout = setTimeout(() => {
+          const eventId = sessionStorage.getItem('bookingEventId');
+          router.push(eventId ? `/booking` : '/events');
+        }, 3000);
+        return () => clearTimeout(timeout);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [elapsedTime, queuePosition, bookingStatus]);
+  }, [elapsedTime, queuePosition, bookingStatus, router]);
 
-  const estimatedWaitTime = Math.max(0, Math.ceil(queuePosition * 0.3)); // ~5.6 seconds per person
   const progress = ((totalInQueue - queuePosition) / totalInQueue) * 100;
-
-  const handleViewTickets = () => {
-    router.push('/tickets');
-  };
-
-  const handleBackHome = () => {
-    router.push('/');
-  };
+  const estimatedMinutes = Math.max(1, Math.ceil(queuePosition * 0.005));
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-[#f7f9fb] text-[#191c1e] font-['Be_Vietnam_Pro'] antialiased">
       <TopNavBar />
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pt-6 pb-12">
-        <div className="max-w-2xl mx-auto px-4 md:px-6">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-headline font-black text-gray-900 mb-3">
-              Bạn đang chờ lượt
-            </h1>
-            <p className="text-gray-600 text-lg">
-              Vé của bạn đang được xử lý. Vui lòng chờ trong hàng đợi
-            </p>
-          </div>
 
-          {/* Queue Card */}
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8 md:p-12 mb-8">
-            {/* Position Badge */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-purple-100 to-purple-50 mb-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-transparent to-purple-400/20 animate-pulse"></div>
-                <div className="relative text-center">
-                  <p className="text-xs uppercase tracking-widest text-purple-600 font-bold mb-1">
-                    Vị trí
-                  </p>
-                  <p className="text-5xl font-black text-purple-600">
-                    #{queuePosition}
-                  </p>
-                </div>
-              </div>
+      <main className="flex-grow max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
-              <p className="text-2xl font-bold text-gray-900 mb-2">
-                {queuePosition === 1
-                  ? '🎉 Đến lượt bạn rồi!'
-                  : `Có ${queuePosition - 1} người trước bạn`}
-              </p>
-              <p className="text-gray-600">
-                Tổng cộng {totalInQueue} người trong hàng
-              </p>
-            </div>
+          {/* CỘT TRÁI: TRẠNG THÁI HÀNG CHỜ */}
+          <div className="lg:col-span-7 space-y-8">
+            <div className="bg-white p-10 md:p-16 rounded-[2rem] shadow-[0_20px_40px_rgba(48,30,201,0.04)] text-center relative overflow-hidden border border-slate-100">
 
-            {/* Progress Bar */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-3">
-                <p className="text-sm font-bold text-gray-700">Tiến độ xử lý</p>
-                <p className="text-sm text-gray-600">
-                  {Math.round(progress)}%
-                </p>
-              </div>
-              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-            </div>
+              {/* Decorative Background */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#301ec9]/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
 
-            {/* Timing Information */}
-            <div className="grid grid-cols-2 gap-4 mb-8 bg-purple-50 p-6 rounded-2xl">
-              <div>
-                <p className="text-xs uppercase tracking-widest text-purple-600 font-bold mb-2">
-                  Thời gian chờ
-                </p>
-                <p className="text-3xl font-black text-purple-600">
-                  {estimatedWaitTime}
-                </p>
-                <p className="text-xs text-gray-600">phút</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-widest text-purple-600 font-bold mb-2">
-                  Tốc độ xử lý
-                </p>
-                <p className="text-3xl font-black text-purple-600">
-                  5.6
-                </p>
-                <p className="text-xs text-gray-600">giây/người</p>
-              </div>
-            </div>
-
-            {/* Status Badge */}
-            <div className="flex items-center justify-center mb-8">
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${
-                bookingStatus === 'completed' 
-                  ? 'bg-green-100'
-                  : 'bg-yellow-100'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  bookingStatus === 'completed'
-                    ? 'bg-green-500'
-                    : 'bg-yellow-500 animate-pulse'
-                }`}></div>
-                <span className={`text-sm font-bold ${
-                  bookingStatus === 'completed'
-                    ? 'text-green-700'
-                    : 'text-yellow-700'
-                }`}>
-                  {bookingStatus === 'processing'
-                    ? 'Đang xử lý đơn hàng'
-                    : '✓ Xác nhận thành công'}
+              <div className="relative z-10 space-y-6">
+                <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider ${bookingStatus === 'completed' ? 'bg-green-100 text-green-700' : 'bg-[#e2dfff] text-[#0f0069]'
+                  }`}>
+                  <span className={`w-2 h-2 rounded-full ${bookingStatus === 'completed' ? 'bg-green-500' : 'bg-[#301ec9] animate-pulse'}`}></span>
+                  {bookingStatus === 'completed' ? 'Đã đến lượt' : 'Trực tiếp'}
                 </span>
+
+                <h1 className="font-['Manrope'] text-2xl md:text-3xl text-[#484554] font-semibold">
+                  {bookingStatus === 'completed' ? 'Sẵn sàng đặt vé!' : 'Vị trí của bạn'}
+                </h1>
+
+                <div className="flex flex-col items-center justify-center py-6">
+                  <span className="font-['Manrope'] text-8xl md:text-9xl font-extrabold text-[#301ec9] tracking-tighter transition-all duration-700">
+                    {bookingStatus === 'completed' ? 'GO!' : queuePosition.toLocaleString()}
+                  </span>
+                  <p className="text-lg text-[#484554]/70 font-medium mt-4">
+                    {bookingStatus === 'completed'
+                      ? 'Đang chuyển hướng bạn đến trang thanh toán...'
+                      : 'Người đang xếp hàng trước bạn'}
+                  </p>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-4 max-w-md mx-auto">
+                  <div className="w-full h-3 bg-[#eceef0] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#301ec9] to-[#5700bf] rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(87,0,191,0.3)]"
+                      style={{ width: `${bookingStatus === 'completed' ? 100 : progress}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-[#484554]">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">schedule</span>
+                      {bookingStatus === 'completed' ? 'Ngay bây giờ' : `Còn khoảng ${estimatedMinutes} phút`}
+                    </span>
+                    <span>{Math.round(bookingStatus === 'completed' ? 100 : progress)}% Hoàn tất</span>
+                  </div>
+                </div>
+
+                <div className="pt-8 border-t border-[#c9c4d7]/30">
+                  <div className={`flex items-center justify-center gap-3 py-4 px-6 rounded-2xl transition-colors ${bookingStatus === 'completed' ? 'bg-green-50 text-green-700' : 'bg-[#301ec9]/5 text-[#301ec9]'
+                    }`}>
+                    <span className="material-symbols-outlined">{bookingStatus === 'completed' ? 'check_circle' : 'info'}</span>
+                    <p className="text-sm md:text-base font-bold leading-relaxed">
+                      {bookingStatus === 'completed'
+                        ? 'Phiên làm việc đã sẵn sàng. Chúc bạn săn vé thành công!'
+                        : 'Đừng tải lại trang, chúng tôi đang giữ chỗ cho bạn. Phiên đăng nhập sẽ tự động chuyển hướng.'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Tips */}
-            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-8">
-              <p className="text-xs uppercase tracking-widest text-blue-600 font-bold mb-2">
-                💡 Mẹo hữu ích
-              </p>
-              <p className="text-sm text-blue-900">
-                {queuePosition === 1
-                  ? 'Vé của bạn đang được xác nhận cuối cùng. Bạn sẽ nhận được thông báo trong giây lát!'
-                  : 'Hãy giữ tab này mở. Bạn sẽ được chuyển hướng tự động khi đến lượt.'}
-              </p>
+            {/* Engagement Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-[#f2f4f6] p-6 rounded-2xl flex gap-4 border border-transparent hover:border-[#301ec9]/10 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-[#301ec9] shadow-sm shrink-0">
+                  <span className="material-symbols-outlined">verified_user</span>
+                </div>
+                <div>
+                  <h3 className="font-['Manrope'] font-bold text-[#191c1e] mb-1">Công bằng tuyệt đối</h3>
+                  <p className="text-sm text-[#484554]">Hệ thống TicketRush đảm bảo thứ tự mua vé minh bạch cho tất cả mọi người.</p>
+                </div>
+              </div>
+              <div className="bg-[#f2f4f6] p-6 rounded-2xl flex gap-4 border border-transparent hover:border-[#301ec9]/10 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-[#301ec9] shadow-sm shrink-0">
+                  <span className="material-symbols-outlined">security</span>
+                </div>
+                <div>
+                  <h3 className="font-['Manrope'] font-bold text-[#191c1e] mb-1">Bảo mật cao</h3>
+                  <p className="text-sm text-[#484554]">Ngăn chặn bot để bảo vệ quyền lợi của người hâm mộ thực sự.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CỘT PHẢI: CONTEXT SỰ KIỆN */}
+          <div className="lg:col-span-5 space-y-8">
+            <div className="bg-white rounded-[2rem] overflow-hidden shadow-[0_20px_40px_rgba(48,30,201,0.04)] border border-slate-100">
+              <div className="relative h-56 w-full">
+                <img
+                  alt={EVENT_DATA.title}
+                  className="w-full h-full object-cover"
+                  src={EVENT_DATA.imageUrl}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute bottom-4 left-6">
+                  <span className="bg-[#5700bf] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                    {EVENT_DATA.category}
+                  </span>
+                </div>
+              </div>
+              <div className="p-8 space-y-6">
+                <div>
+                  <h2 className="font-['Manrope'] text-2xl font-black text-[#191c1e] leading-tight mb-2">
+                    {EVENT_DATA.title}
+                  </h2>
+                  <p className="text-[#484554] font-bold flex items-center gap-2 text-sm">
+                    <span className="material-symbols-outlined text-[#301ec9] text-xl">location_on</span>
+                    {EVENT_DATA.location}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-6 border-t border-[#eceef0]">
+                  <div>
+                    <p className="text-[10px] text-[#484554]/60 uppercase font-black tracking-widest mb-1">Ngày diễn ra</p>
+                    <p className="font-bold text-[#191c1e]">{EVENT_DATA.date}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#484554]/60 uppercase font-black tracking-widest mb-1">Giờ bắt đầu</p>
+                    <p className="font-bold text-[#191c1e]">{EVENT_DATA.time}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-gray-200 my-8"></div>
-
-            {/* Booking Summary */}
-            <div className="bg-gray-50 p-6 rounded-2xl mb-8">
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">
-                Thông tin đơn hàng
+            <div className="bg-[#eceef0]/50 p-8 rounded-[2rem] space-y-6 border border-white">
+              <h3 className="font-['Manrope'] text-xl font-black text-[#191c1e] flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#5700bf]">lightbulb</span>
+                Mẹo trong lúc chờ đợi
               </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Tên sự kiện</span>
-                  <span className="text-sm font-bold text-gray-900">Concert 2024</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Số lượng vé</span>
-                  <span className="text-sm font-bold text-gray-900">2 vé</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Tổng tiền</span>
-                  <span className="text-sm font-bold text-gray-900">500,000 ₫</span>
-                </div>
+              <ul className="space-y-5">
+                {[
+                  "Chuẩn bị sẵn thông tin thanh toán để hoàn tất đặt vé nhanh nhất.",
+                  "Kiểm tra kết nối mạng. Sử dụng Wifi ổn định thay vì 4G nếu có thể.",
+                  "Mỗi tài khoản chỉ nên mở một trình duyệt duy nhất để tránh lỗi."
+                ].map((tip, index) => (
+                  <li key={index} className="flex gap-4 items-start">
+                    <span className="flex-shrink-0 w-6 h-6 bg-[#301ec9] text-white rounded-full text-[10px] font-black flex items-center justify-center">
+                      {index + 1}
+                    </span>
+                    <p className="text-sm text-[#484554] font-medium leading-relaxed">{tip}</p>
+                  </li>
+                ))}
+              </ul>
+              <div className="pt-4">
+                <button className="w-full py-4 border-2 border-[#301ec9]/10 text-[#301ec9] font-black rounded-2xl hover:bg-[#301ec9] hover:text-white transition-all text-sm flex items-center justify-center gap-2">
+                  Xem các câu hỏi thường gặp
+                  <span className="material-symbols-outlined text-sm">open_in_new</span>
+                </button>
               </div>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            {bookingStatus === 'completed' ? (
-              <>
-                <button
-                  onClick={handleViewTickets}
-                  className="w-full py-4 bg-purple-600 text-white font-bold rounded-full hover:bg-purple-700 transition-colors active:scale-95 text-lg shadow-lg"
-                >
-                  🎫 Xem Vé Của Tôi
-                </button>
-                <button
-                  onClick={handleBackHome}
-                  className="w-full py-3 bg-white text-purple-600 font-bold rounded-full border-2 border-purple-600 hover:bg-purple-50 transition-colors active:scale-95"
-                >
-                  Quay Về Trang Chủ
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  disabled
-                  className="w-full py-4 bg-gray-400 text-white font-bold rounded-full cursor-not-allowed opacity-60 text-lg"
-                >
-                  ⏳ Chờ Lượt Xử Lý...
-                </button>
-                <button
-                  onClick={handleBackHome}
-                  className="w-full py-3 bg-white text-gray-600 font-bold rounded-full border-2 border-gray-300 hover:bg-gray-50 transition-colors active:scale-95"
-                >
-                  Quay Về Trang Chủ
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Help Text */}
-          <p className="text-center text-xs text-gray-500 mt-6">
-            Không đóng tab này. Chúng tôi sẽ thông báo cho bạn khi vé đã sẵn sàng
-          </p>
         </div>
       </main>
-    </>
+
+      <Footer />
+
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+        
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+      `}</style>
+    </div>
   );
 }

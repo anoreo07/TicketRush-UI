@@ -117,7 +117,15 @@ export const bookingApi = {
    * Get available seats for event
    */
   getAvailableSeats: (eventId: string) =>
-    apiFetch(`/events/${eventId}/seats`, {
+    apiAuthFetch(`/events/${eventId}/seats`, {
+      method: 'GET',
+    }),
+
+  /**
+   * Get user's tickets
+   */
+  getUserTickets: () =>
+    apiAuthFetch('/bookings/my-tickets', {
       method: 'GET',
     }),
 };

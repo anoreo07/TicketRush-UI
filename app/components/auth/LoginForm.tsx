@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye } from 'lucide-react';
 import { authApi, saveAuthToken, saveUserData } from '@/lib/api';
 import { validateLoginForm } from '@/lib/validators';
@@ -12,6 +12,8 @@ interface LoginFormProps {
 
 export const LoginForm = ({ onSubmitSuccess }: LoginFormProps) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +80,7 @@ export const LoginForm = ({ onSubmitSuccess }: LoginFormProps) => {
       if (onSubmitSuccess) {
         onSubmitSuccess();
       } else {
-        router.push('/');
+        router.push(redirect || '/');
       }
     } catch (error: any) {
       const errorMessage = error?.message || 'Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.';

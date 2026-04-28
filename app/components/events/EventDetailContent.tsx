@@ -99,7 +99,7 @@ export const EventDetailContent: React.FC<EventDetailContentProps> = ({ eventId 
             <div className="flex items-center gap-8 pt-8 border-t border-slate-100">
               <div>
                 <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Giá vé chỉ từ</p>
-                <p className="text-3xl font-black text-indigo-600">
+                <p className="text-3xl font-black text-[#2ECC71]">
                   {currentEvent.price_range?.min?.toLocaleString('vi-VN') || '0'}đ
                 </p>
               </div>
@@ -108,7 +108,14 @@ export const EventDetailContent: React.FC<EventDetailContentProps> = ({ eventId 
                   sessionStorage.setItem('bookingEventId', eventId);
                   router.push('/queue');
                 }}
-                className="px-10 py-4 bg-indigo-600 text-white rounded-full font-bold text-lg hover:bg-indigo-700 transition-all hover:shadow-xl hover:shadow-indigo-200 active:scale-95"
+                className="px-10 py-4 bg-[#2ECC71] text-white rounded-full font-bold text-lg 
+             transition-all active:scale-95
+             /* Hiệu ứng phát sáng mặc định */
+             shadow-[0_0_15px_rgba(46,204,113,0.4)] 
+             /* Hiệu ứng khi hover: sáng mạnh hơn và đổi màu theo ý bạn */
+             hover:bg-[#27ae60] 
+             hover:shadow-[0_0_25px_rgba(46,204,113,0.6)] 
+             hover:shadow-green-200"
               >
                 Mua vé ngay
               </button>

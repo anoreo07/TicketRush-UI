@@ -1,165 +1,185 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SeatSelection } from '@/app/components/booking/SeatSelection';
 import { CheckoutSummary } from '@/app/components/booking/CheckoutSummary';
-import { mockEventBooking } from '@/lib/mock/booking-data';
 import { eventsApi, EventDetail, SeatMap } from '@/lib/api';
 import { useBookingContext } from '@/lib/context/BookingContext';
+import { useAuth } from '@/lib/useAuth';
+import TopNavBar from '@/app/components/TopNavBar';
+import { useRouter } from 'next/navigation';
 
 export default function BookingPageContent() {
-    const searchParams = useSearchParams();
-    const [eventId, setEventId] = useState<string | null>(null);
-    const [event, setEvent] = useState<EventDetail | null>(null);
-    const [seatMap, setSeatMap] = useState<SeatMap | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const { setEventId: setEventIdContext } = useBookingContext();
-    
-    // Get eventId from searchParams or sessionStorage
-    useEffect(() => {
-        console.log('🔍 BookingPageContent: Getting eventId...');
-        const id = searchParams.get('eventId') || sessionStorage.getItem('bookingEventId');
-        console.log('📍 EventId found:', id);
-        if (id) {
-            setEventId(id);
-            setEventIdContext(id);
-        } else {
-            console.warn('⚠️ No eventId found!');
-        }
-    }, [searchParams, setEventIdContext]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { token, isLoading: authLoading } = useAuth();
+  const [eventId, setEventId] = useState<string | null>(null);
+  const [event, setEvent] = useState<EventDetail | null>(null);
+  const [seatMap, setSeatMapLocal] = useState<SeatMap | null>(null);
+  const [isLoadingEvent, setIsLoadingEvent] = useState(false);
+  const [isLoadingSeats, setIsLoadingSeats] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    // Load event data when eventId changes
-    useEffect(() => {
-        console.log('📡 Loading event with ID:', eventId);
-        if (!eventId) {
-            console.log('⚠️ No eventId, skipping load');
-            setIsLoading(false);
-            return;
-        }
+  const { setEventId: setEventIdContext, setSeatMap: setSeatMapContext } = useBookingContext();
 
-        const loadEvent = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
-                console.log('🔄 Fetching event data and seats for:', eventId);
-                const [eventData, seatMapData] = await Promise.all([
-                    eventsApi.getById(eventId),
-                    (eventsApi as any).getSeats?.(eventId) as Promise<SeatMap>,
-                ]);
-                console.log('✅ Event loaded:', eventData);
-                console.log('✅ Seats loaded:', seatMapData);
-                setEvent(eventData);
-                setSeatMap(seatMapData);
-            } catch (err: any) {
-                console.error('❌ Failed to load event:', err);
-                setError(err?.message || 'Không thể tải sự kiện');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadEvent();
-    }, [eventId]);
-
-    // Use real event or fallback to mock
-    const displayEvent = event || mockEventBooking;
-
-    if (isLoading) {
-        return (
-            <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin h-12 w-12 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-gray-600">Đang tải sự kiện...</p>
-                </div>
-            </main>
-        );
+  // Step 0: Check authentication
+  useEffect(() => {
+    if (!authLoading && !token) {
+      router.push(`/login?redirect=/booking${eventId ? `?eventId=${eventId}` : ''}`);
     }
+  }, [token, authLoading, router, eventId]);
 
-    if (error) {
-        return (
-            <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center px-4">
-                <div className="text-center">
-                    <p className="text-red-500 mb-4">{error}</p>
-                    <p className="text-gray-600">Sử dụng dữ liệu mặc định...</p>
-                </div>
-            </main>
-        );
+  // Step 1: Resolve eventId from URL params or sessionStorage
+  useEffect(() => {
+    const id = searchParams.get('eventId') || sessionStorage.getItem('bookingEventId');
+    if (id) {
+      setEventId(id);
+      setEventIdContext(id);
     }
+  }, [searchParams, setEventIdContext]);
 
+  // Step 2: Fetch event details
+  useEffect(() => {
+    if (!eventId) return;
+    const fetchEvent = async () => {
+      setIsLoadingEvent(true);
+      try {
+        const data = await eventsApi.getById(eventId);
+        setEvent(data);
+      } catch (err: any) {
+        console.error('Failed to load event:', err);
+        setError(err?.message || 'Không thể tải thông tin sự kiện');
+      } finally {
+        setIsLoadingEvent(false);
+      }
+    };
+    fetchEvent();
+  }, [eventId]);
+
+  // Step 3: Fetch seat map
+  const fetchSeatMap = useCallback(async () => {
+    if (!eventId) return;
+    setIsLoadingSeats(true);
+    setError(null);
+    try {
+      const data = await eventsApi.getSeats(eventId);
+      setSeatMapLocal(data);
+      setSeatMapContext(data);
+    } catch (err: any) {
+      console.error('Failed to load seats:', err);
+      setError(err?.message || 'Không thể tải sơ đồ ghế');
+    } finally {
+      setIsLoadingSeats(false);
+    }
+  }, [eventId, setSeatMapContext]);
+
+  useEffect(() => {
+    fetchSeatMap();
+  }, [fetchSeatMap]);
+
+  // Loading event info skeleton
+  if (isLoadingEvent) {
     return (
-        <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-            {/* Event Banner */}
-            <div className="px-4 md:px-6 mt-6">
-                <div
-                    className="relative w-full max-w-7xl mx-auto h-80 md:h-96 overflow-hidden rounded-2xl"
-                    style={{
-                        backgroundImage: `url('${
-                            (event && 'image_url' in event ? event.image_url : null) || 
-                            (displayEvent && 'image' in displayEvent ? (displayEvent as any).image : mockEventBooking.image)
-                        }')`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                    }}
-                >
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50"></div>
-
-                    {/* Banner Content */}
-                    <div className="absolute inset-0 flex items-end px-6 md:px-12 py-8">
-                        <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="px-3 py-1 bg-purple-600 text-white text-xs font-bold uppercase rounded-lg">
-                                    {(event && 'status' in event ? event.status : null) || 
-                                     (displayEvent && 'category' in displayEvent ? (displayEvent as any).category : 'Event')}
-                                </span>
-                                <span className="px-3 py-1 bg-white/20 text-white text-xs font-medium rounded-lg">
-                                    Sắp diễn ra
-                                </span>
-                            </div>
-
-                            <h1 className="text-3xl md:text-5xl font-headline font-black text-white leading-tight">
-                                {displayEvent.title}
-                            </h1>
-
-                            <div className="flex gap-6 mt-4 text-white text-sm md:text-base">
-                                <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-lg">calendar_today</span>
-                                    <span>
-                                        {event && 'event_date' in event
-                                            ? new Date(event.event_date).toLocaleString('vi-VN')
-                                            : 'Sắp diễn ra'}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-lg">location_on</span>
-                                    <span>
-                                        {event && 'location' in event
-                                            ? event.location
-                                            : (displayEvent && 'location' in displayEvent ? (displayEvent as any).location : 'Địa điểm')}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 pb-32">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Left Side: Seat Selection - Takes 8 columns on desktop */}
-                    <div className="lg:col-span-8">
-                        <SeatSelection />
-                    </div>
-
-                    {/* Right Sidebar: Checkout Summary - Takes 4 columns, sticky on desktop */}
-                    <div className="lg:col-span-4 lg:sticky lg:top-24">
-                        <CheckoutSummary />
-                    </div>
-                </div>
-            </div>
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        <TopNavBar />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="animate-spin h-12 w-12 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto"></div>
+            <p className="text-slate-500 font-medium">Đang tải thông tin sự kiện...</p>
+          </div>
         </main>
+      </div>
     );
+  }
+
+  const eventImageUrl =
+    event?.image_url ||
+    'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?q=80&w=2070';
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <TopNavBar />
+
+      {/* Event Banner */}
+      <div className="px-4 md:px-6 pt-24">
+        <div
+          className="relative w-full max-w-7xl mx-auto h-64 md:h-80 overflow-hidden rounded-2xl bg-slate-800"
+          style={{
+            backgroundImage: `url('${eventImageUrl}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/30 to-black/70"></div>
+
+          <div className="absolute inset-0 flex items-end px-6 md:px-12 py-8">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                {event?.status && (
+                  <span className="px-3 py-1 bg-indigo-600 text-white text-xs font-bold uppercase rounded-lg">
+                    {event.status}
+                  </span>
+                )}
+                <span className="px-3 py-1 bg-white/20 backdrop-blur text-white text-xs font-medium rounded-lg">
+                  Đặt vé
+                </span>
+              </div>
+
+              <h1 className="text-3xl md:text-4xl font-black text-white leading-tight drop-shadow-lg">
+                {event?.title || 'Đang tải sự kiện...'}
+              </h1>
+
+              <div className="flex gap-6 text-white/90 text-sm flex-wrap">
+                {event?.event_date && (
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base">calendar_today</span>
+                    <span>{new Date(event.event_date).toLocaleString('vi-VN')}</span>
+                  </div>
+                )}
+                {event?.location && (
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base">location_on</span>
+                    <span>{event.location}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-6 py-10 pb-32">
+
+        {/* Global error with retry */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-red-500 flex-shrink-0">error</span>
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+            </div>
+            <button
+              onClick={fetchSeatMap}
+              className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-full hover:bg-red-700 transition-colors flex-shrink-0"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left: Seat Map — 8 cols */}
+          <div className="lg:col-span-8">
+            <SeatSelection seatMap={seatMap} isLoadingSeats={isLoadingSeats} />
+          </div>
+
+          {/* Right: Checkout Summary — 4 cols, sticky */}
+          <div className="lg:col-span-4 lg:sticky lg:top-24 self-start">
+            <CheckoutSummary />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 }

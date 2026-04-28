@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import TopNavBar from '@/app/components/TopNavBar';
 import Footer from '@/app/components/Footer';
+import { bookingApi } from '@/lib/api/booking';
 
 interface Ticket {
   id: string;
@@ -65,31 +66,59 @@ type FilterTab = 'all' | 'upcoming' | 'used';
 
 export default function TicketsPage() {
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
-  const [displayTickets, setDisplayTickets] = useState<Ticket[]>(mockTickets);
+  const [displayTickets, setDisplayTickets] = useState<Ticket[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let filtered = mockTickets;
-    const now = new Date();
+    const fetchTickets = async () => {
+      setIsLoading(true);
+      try {
+        const response = await bookingApi.getUserTickets();
+        
+        // Map backend response to Ticket interface
+        const mappedTickets: Ticket[] = response.map((item: any) => ({
+          id: item.id,
+          eventImage: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&q=80', // Default placeholder
+          eventTitle: item.bookings?.events?.title || 'Sự kiện',
+          eventDate: item.bookings?.events?.start_time 
+            ? new Date(item.bookings.events.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : 'Chưa cập nhật',
+          eventDateTime: item.bookings?.events?.start_time ? new Date(item.bookings.events.start_time) : undefined,
+          eventLocation: item.bookings?.events?.location || 'Chưa rõ địa điểm',
+          zone: `Hàng ${item.seats?.row_index + 1}, Ghế ${item.seats?.col_index + 1}`,
+          qrCode: item.qr_code,
+          ticketCode: `TR-${item.id.slice(0, 8).toUpperCase()}`,
+          status: new Date(item.bookings?.events?.start_time) < new Date() ? 'used' : 'valid',
+        }));
 
-    switch (filterTab) {
-      case 'upcoming':
-        filtered = mockTickets.filter(
-          (ticket) =>
-            ticket.status !== 'used' &&
-            ticket.eventDateTime &&
-            ticket.eventDateTime > now
-        );
-        break;
-      case 'used':
-        filtered = mockTickets.filter((ticket) => ticket.status === 'used');
-        break;
-      case 'all':
-      default:
-        filtered = mockTickets;
-        break;
-    }
+        let filtered = mappedTickets;
+        const now = new Date();
 
-    setDisplayTickets(filtered);
+        switch (filterTab) {
+          case 'upcoming':
+            filtered = mappedTickets.filter(
+              (ticket) =>
+                ticket.status !== 'used' &&
+                ticket.eventDateTime &&
+                ticket.eventDateTime > now
+            );
+            break;
+          case 'used':
+            filtered = mappedTickets.filter((ticket) => ticket.status === 'used');
+            break;
+          default:
+            break;
+        }
+
+        setDisplayTickets(filtered);
+      } catch (err) {
+        console.error('❌ Failed to fetch tickets:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTickets();
   }, [filterTab]);
 
   const handleDownload = (ticketCode: string) => {

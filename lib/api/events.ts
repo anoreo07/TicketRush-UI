@@ -38,28 +38,42 @@ export interface EventDetail extends Event {
   refund_policy: string;
 }
 
+// Seat from backend DB
 export interface Seat {
   id: string;
-  seat_number: string;
-  row: string;
-  col: number;
-  zone: 'vip' | 'standard' | 'economy';
+  col_index: number;
   price: number;
   status: 'available' | 'locked' | 'sold';
-  locked_until?: string; // ISO datetime
-  locked_by_user?: boolean;
+  locked_by?: string | null;
+  locked_until?: string | null;
+  locked_by_user?: boolean; // set client-side after lock
 }
 
+// Row in the seat matrix returned by backend
+export interface SeatRow {
+  row_index: number;
+  seats: Seat[];
+}
+
+// Backend /events/:id/seats response shape
 export interface SeatMap {
-  event_id: string;
-  total_seats: number;
-  available_seats: number;
-  zones: {
-    [key: string]: {
-      name: string;
-      price: number;
-      seats: Seat[];
-    };
+  event: {
+    id: string;
+    title: string;
+    location: string;
+    start_time: string;
+    status: string;
+  };
+  matrix_config: {
+    total_rows: number;
+    total_cols: number;
+  };
+  seats: SeatRow[]; // array of rows
+  stats: {
+    total: number;
+    available: number;
+    locked: number;
+    sold: number;
   };
 }
 
@@ -105,7 +119,7 @@ export const eventsApi = {
    * GET /api/v1/events/:id
    */
   getById: (eventId: string) =>
-    apiFetch<EventDetail>(`/events/${eventId}`, {
+    apiAuthFetch<EventDetail>(`/events/${eventId}`, {
       method: 'GET',
     }),
 
@@ -114,7 +128,7 @@ export const eventsApi = {
    * GET /api/v1/events/:id/seats
    */
   getSeats: (eventId: string) =>
-    apiFetch<SeatMap>(`/events/${eventId}/seats`, {
+    apiAuthFetch<SeatMap>(`/events/${eventId}/seats`, {
       method: 'GET',
     }),
 
@@ -167,8 +181,8 @@ export const adminEventsApi = {
     start_time: string;
     location: string;
     matrix_config: {
-      rows: number;
-      cols: number;
+      total_rows: number;
+      total_cols: number;
     };
     seat_price: number;
   }) =>

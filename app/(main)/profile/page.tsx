@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
         // Load tickets
         try {
-          const ticketsData = await bookingApi.getMyTickets();
+          const ticketsData = await bookingApi.getUserTickets();
           setTickets(ticketsData || []);
         } catch (ticketErr) {
           console.warn('Failed to load tickets:', ticketErr);
@@ -59,9 +59,8 @@ export default function ProfilePage() {
   }, [router]);
 
   const ticketCount = tickets.length;
-  const upcomingTickets = tickets.filter((t) => {
-    // Assuming tickets have some date field to check if upcoming
-    return true; // Simplified for now
+  const upcomingTickets = tickets.filter((t: any) => {
+    return t.bookings?.events?.start_time && new Date(t.bookings.events.start_time) > new Date();
   }).length;
 
   if (isLoading) {
@@ -252,61 +251,66 @@ export default function ProfilePage() {
             <section>
               <div className="flex justify-between items-center mb-10">
                 <h2 className="text-2xl font-black tracking-tight">Vé đã mua gần đây</h2>
-                <a className="text-primary text-sm font-bold hover:underline" href="#">
+                <a className="text-primary text-sm font-bold hover:underline" href="/tickets">
                   Xem tất cả lịch sử
                 </a>
               </div>
-              {/* Event Card with Asymmetry and Layered Depth */}
-              <div className="bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                <div className="md:w-2/5 h-48 md:h-auto overflow-hidden rounded-2xl md:rounded-none">
-                  <img
-                    alt="Event Image"
-                    className="w-full h-full object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3WikHb0--dsPp-07xu62WYOw_iA6swK__fxejKsdr0i_oqo6Y9GuxCRSlTpz15fGhLM_UObqw6I8Ht17ir798tfBmRWjSNt-sdqbrnSoE5fHORR4SVqLfkIQLViyiEEUmwDvWpb8pOluxPTBcbOuAYtmo4v8C7464ITh3Snq8rMrKNJK31q3wBlRga_tQVHrroVSoChj2wcvIm5jqCa5jdlvOPk5PEVjlGyVVMNH7ZHUCsDPXuBnHuoaZUpIQGU3XkzQNJtUP2lc"
-                  />
-                </div>
-                <div className="md:w-3/5 p-8 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="px-3 py-1.5 rounded-full text-[10px] font-bold bg-primary-fixed text-on-primary-fixed uppercase tracking-wider">
-                        Đã thanh toán
-                      </span>
-                      <span className="text-on-surface-variant text-xs font-bold">#TR-882910</span>
-                    </div>
-                    <h3 className="text-lg font-black text-on-surface mb-3">
-                      Sky Tour: Mùa hè rực rỡ 2024
-                    </h3>
-                    <div className="flex flex-col gap-1.5 text-sm text-on-surface-variant">
-                      <p className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-base">location_on</span>
-                        Sân vận động Mỹ Đình, Hà Nội
-                      </p>
-                      <p className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-base">event</span>
-                        20:00 • 15 tháng 07, 2024
-                      </p>
+              
+              {tickets.length > 0 ? (
+                <div className="bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col md:flex-row transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                  <div className="md:w-2/5 h-48 md:h-auto overflow-hidden rounded-2xl md:rounded-none">
+                    <img
+                      alt="Event Image"
+                      className="w-full h-full object-cover"
+                      src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&q=80"
+                    />
+                  </div>
+                  <div className="md:w-3/5 p-8 flex flex-col justify-between">
+                    {(tickets[0] as any).bookings?.events && (
+                      <div>
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="px-3 py-1.5 rounded-full text-[10px] font-bold bg-primary-fixed text-on-primary-fixed uppercase tracking-wider">
+                            Đã thanh toán
+                          </span>
+                          <span className="text-on-surface-variant text-xs font-bold">#TR-{(tickets[0] as any).id.slice(0, 8).toUpperCase()}</span>
+                        </div>
+                        <h3 className="text-lg font-black text-on-surface mb-3">
+                          {(tickets[0] as any).bookings.events.title}
+                        </h3>
+                        <div className="flex flex-col gap-1.5 text-sm text-on-surface-variant">
+                          <p className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-base">location_on</span>
+                            {(tickets[0] as any).bookings.events.location}
+                          </p>
+                          <p className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-base">event</span>
+                            {new Date((tickets[0] as any).bookings.events.start_time).toLocaleString('vi-VN')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-8 flex items-center justify-between pt-7 border-t border-surface-container-high">
+                      <div className="flex gap-2">
+                        <span className="text-sm font-bold text-primary">
+                          Hàng {(tickets[0] as any).seats?.row_index + 1}, Ghế {(tickets[0] as any).seats?.col_index + 1}
+                        </span>
+                      </div>
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => router.push('/tickets')}
+                          className="px-6 py-2.5 rounded-full border border-outline-variant text-sm font-bold hover:bg-surface-container transition-colors"
+                        >
+                          Chi tiết
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div className="mt-8 flex items-center justify-between pt-7 border-t border-surface-container-high">
-                    <div className="flex -space-x-2">
-                      <div className="w-9 h-9 rounded-full border-2 border-white bg-slate-400 flex items-center justify-center text-[9px] font-bold text-white">
-                        SV
-                      </div>
-                      <div className="w-9 h-9 rounded-full border-2 border-white bg-indigo-300 flex items-center justify-center text-[9px] font-bold text-indigo-700">
-                        VIP
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <button className="px-6 py-2.5 rounded-full border border-outline-variant text-sm font-bold hover:bg-surface-container transition-colors">
-                        Chi tiết
-                      </button>
-                      <button className="bg-tertiary text-on-tertiary px-6 py-2.5 rounded-full text-sm font-bold hover:opacity-90">
-                        Tải vé (PDF)
-                      </button>
-                    </div>
-                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-surface-container-lowest p-10 rounded-2xl text-center">
+                  <p className="text-on-surface-variant">Bạn chưa có vé nào. Hãy khám phá các sự kiện thú vị ngay!</p>
+                </div>
+              )}
             </section>
 
             {/* Activity Bento Grid */}
