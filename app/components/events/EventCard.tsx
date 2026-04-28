@@ -8,6 +8,7 @@
 import React from 'react';
 import { Event } from '@/lib/api/events';
 import { useEventBooking } from '@/lib/context/EventBookingContext';
+import { useRouter } from 'next/navigation';
 
 interface EventCardProps {
   event: Event;
@@ -15,12 +16,16 @@ interface EventCardProps {
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
+  const router = useRouter();
   const { selectEvent, isLoading } = useEventBooking();
 
   const handleClick = async () => {
     try {
+      console.log('🎫 EventCard clicked - eventId:', event.id);
       await selectEvent(event.id);
       onClick?.(event.id);
+      // Navigate to event detail page
+      router.push(`/events/${event.id}`);
     } catch (err) {
       console.error('Failed to select event:', err);
     }
@@ -96,8 +101,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
           <div>
             <p className="text-xs text-gray-500 font-medium">Giá vé</p>
             <p className="text-lg font-bold text-purple-600">
-              {event.price_range.min.toLocaleString('vi-VN')} -{' '}
-              {event.price_range.max.toLocaleString('vi-VN')} ₫
+              {event.price_range ? `${event.price_range.min.toLocaleString('vi-VN')} - ${event.price_range.max.toLocaleString('vi-VN')} ₫` : 'Chưa xác định'}
             </p>
           </div>
 

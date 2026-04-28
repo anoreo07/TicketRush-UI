@@ -2,12 +2,23 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import ProfileDropdown from "./auth/ProfileDropdown";
+import { getUserData } from "@/lib/api/client";
+import { useEffect, useState } from "react";
 
 interface TopNavBarProps {
   hiddenLinks?: boolean;
 }
 
 export default function TopNavBar({ hiddenLinks = false }: TopNavBarProps) {
+  const [userData, setUserData] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setUserData(getUserData());
+  }, []);
+  
   return (
     <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_20px_40px_rgba(48,30,201,0.06)]">
       <div className="flex justify-between items-center w-full px-8 py-4 max-w-7xl mx-auto">
@@ -49,16 +60,14 @@ export default function TopNavBar({ hiddenLinks = false }: TopNavBarProps) {
             <span className="material-symbols-outlined">notifications</span>
           </button>
 
-          <button className="hidden md:block px-6 py-2 bg-tertiary text-on-tertiary font-bold rounded-full hover:bg-[#4a40e0] transition-all active:scale-95">
-            Tạo sự kiện
-          </button>
-
           <Link
-            href="/profile"
-            className="p-2 text-slate-600 hover:scale-95 duration-200 inline-block"
+            href="/events/create"
+            className="hidden md:block px-6 py-2 bg-tertiary text-on-tertiary font-bold rounded-full hover:bg-[#4a40e0] transition-all active:scale-95"
           >
-            <span className="material-symbols-outlined">account_circle</span>
+            Tạo sự kiện
           </Link>
+
+          <ProfileDropdown userEmail={userData?.email || "User"} />
         </div>
       </div>
     </nav>

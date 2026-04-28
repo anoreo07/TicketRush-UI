@@ -1,9 +1,37 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { eventsApi, Event } from "@/lib/api";
 
 export default function RecommendedCarousel() {
-  const recommendations = [
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await eventsApi.getAll({
+          page: 1,
+          limit: 3,
+          status: 'published',
+        });
+        setEvents(response.data || []);
+      } catch (err: any) {
+        console.error('Failed to fetch recommended events:', err);
+        setError(err?.message || 'Không thể tải gợi ý sự kiện');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  const fallbackRecommendations = [
     {
       title: "Đêm nhạc: Chuyện Nhỏ",
       category: "ÂM NHẠC INDIE",
@@ -26,6 +54,13 @@ export default function RecommendedCarousel() {
         "https://lh3.googleusercontent.com/aida-public/AB6AXuW1X2Y3Z4A5B6C7D8E9F0G1H2I3J4K5L6M7N8O9P0",
     },
   ];
+
+  const recommendations = events.length > 0 ? events.map((event) => ({
+    title: event.title,
+    category: "SỰ KIỆN NỔI BẬT",
+    location: event.venue || event.location || "Chưa cập nhật địa điểm",
+    image: event.image_url || "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop",
+  })) : fallbackRecommendations;
 
   return (
     <section className="max-w-7xl mx-auto px-8">

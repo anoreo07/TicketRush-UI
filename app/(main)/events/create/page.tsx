@@ -4,8 +4,13 @@ import { useState } from "react";
 import { Lightbulb, Layers } from "lucide-react";
 import TopNavBar from "@/app/components/TopNavBar";
 import Footer from "@/app/components/Footer";
+import { adminEventsApi } from "@/lib/api/events";
+import { useAuth } from "@/lib/useAuth";
+import { useRouter } from "next/navigation";
 
 export default function CreateEventPage() {
+  const router = useRouter();
+  const { token } = useAuth();
   const [rows, setRows] = useState(6);
   const [cols, setCols] = useState(10);
   const [eventName, setEventName] = useState("");
@@ -13,6 +18,9 @@ export default function CreateEventPage() {
   const [startTime, setStartTime] = useState("");
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // Generate seat grid for preview
   const generateSeats = () => {
@@ -24,6 +32,85 @@ export default function CreateEventPage() {
       }
     }
     return seats;
+  };
+
+  const handleCreate = async () => {
+    try {
+      console.log("🚀 handleCreate called");
+      console.log("📝 Form data:", { eventName, description, startTime, price, location });
+      
+      // Validate required fields
+      if (!eventName.trim()) {
+        setError("Vui lòng nhập tên sự kiện");
+        return;
+      }
+      if (!description.trim()) {
+        setError("Vui lòng nhập mô tả sự kiện");
+        return;
+      }
+      if (!startTime) {
+        setError("Vui lòng chọn thời gian bắt đầu");
+        return;
+      }
+      if (!price || parseInt(price) <= 0) {
+        setError("Vui lòng nhập giá vé hợp lệ");
+        return;
+      }
+      if (!location.trim()) {
+        setError("Vui lòng nhập địa điểm");
+        return;
+      }
+
+      console.log("✅ All fields validated");
+      console.log("🔑 Token:", token);
+
+      if (!token) {
+        setError("Vui lòng đăng nhập trước khi tạo sự kiện");
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      const payload = {
+        title: eventName,
+        description: description,
+        start_time: new Date(startTime).toISOString(),
+        location: location,
+        matrix_config: {
+          total_rows: rows,
+          total_cols: cols,
+        },
+        seat_price: parseInt(price),
+      };
+
+      console.log("📤 Sending payload:", payload);
+      const response = await adminEventsApi.create(payload);
+      
+      console.log("📥 Response:", response);
+      
+      if (response?.id) {
+        setSuccess(true);
+        console.log("✅ Event created successfully, redirecting...");
+        // Redirect to events page after 1 second
+        setTimeout(() => {
+          router.push("/events");
+        }, 1000);
+      } else {
+        setError("Không thể tạo sự kiện. Vui lòng thử lại.");
+      }
+    } catch (err: any) {
+      console.error("❌ Error creating event:", err);
+      console.error("Error details:", {
+        message: err?.message,
+        code: err?.code,
+        statusCode: err?.statusCode,
+        details: err?.details,
+      });
+      setError(err?.message || "Có lỗi xảy ra khi tạo sự kiện");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const seats = generateSeats();
@@ -40,6 +127,35 @@ export default function CreateEventPage() {
             Chia sẻ trải nghiệm tuyệt vời của bạn với cộng đồng TicketRush.
           </p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-red-800 font-medium" style={{ fontFamily: "Manrope" }}>Lỗi</p>
+              <p className="text-red-700 text-sm" style={{ fontFamily: "Be Vietnam Pro" }}>{error}</p>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+            <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-green-800 font-medium" style={{ fontFamily: "Manrope" }}>Thành công</p>
+              <p className="text-green-700 text-sm" style={{ fontFamily: "Be Vietnam Pro" }}>Sự kiện đã được tạo! Đang chuyển hướng...</p>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* LEFT COLUMN: Form */}
@@ -224,10 +340,12 @@ export default function CreateEventPage() {
                 Lưu nháp
               </button>
               <button
-                className="px-10 py-3 rounded-full font-bold bg-[#5700bf] text-white shadow-lg shadow-[#5700bf]/20 hover:translate-y-[-2px] transition-all active:scale-95"
+                onClick={handleCreate}
+                disabled={loading}
+                className="px-10 py-3 rounded-full font-bold bg-[#5700bf] text-white shadow-lg shadow-[#5700bf]/20 hover:translate-y-[-2px] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: "Manrope" }}
               >
-                Tạo sự kiện ngay
+                {loading ? "Đang tạo..." : "Tạo sự kiện ngay"}
               </button>
             </div>
           </div>

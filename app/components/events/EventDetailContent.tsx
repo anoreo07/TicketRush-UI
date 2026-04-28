@@ -1,11 +1,6 @@
-/**
- * EventDetailContent
- * Client component hiển thị chi tiết sự kiện
- */
-
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useEventBooking } from '@/lib/context/EventBookingContext';
 import TopNavBar from '@/app/components/TopNavBar';
 import { useRouter } from 'next/navigation';
@@ -16,113 +11,104 @@ interface EventDetailContentProps {
 
 export const EventDetailContent: React.FC<EventDetailContentProps> = ({ eventId }) => {
   const router = useRouter();
-  const { currentEvent, isLoading, error, selectEvent } = useEventBooking();
-  const [isSelected, setIsSelected] = useState(false);
+  const { currentEvent, isLoading, selectEvent } = useEventBooking();
+  const selectEventRef = useRef(selectEvent);
+  const loadedEventIdRef = useRef<string | null>(null);
 
-  /**
-   * Load event on mount
-   */
   useEffect(() => {
+    selectEventRef.current = selectEvent;
+  }, [selectEvent]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    if (loadedEventIdRef.current === eventId) return;
+    loadedEventIdRef.current = eventId;
+
     const loadEvent = async () => {
       try {
-        await selectEvent(eventId);
-        setIsSelected(true);
+        await selectEventRef.current(eventId);
       } catch (err) {
-        console.error('Failed to load event:', err);
+        console.error('❌ Failed to load event:', err);
       }
     };
-
     loadEvent();
-  }, [eventId, selectEvent]);
+  }, [eventId]);
 
   if (isLoading || !currentEvent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="min-h-screen bg-white">
         <TopNavBar />
-        <main className="pt-28 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-8">
-            <div className="h-96 bg-gray-200 rounded-2xl" />
-            <div className="h-40 bg-gray-200 rounded-2xl" />
-          </div>
+        <main className="pt-28 pb-20 px-4 md:px-8 max-w-7xl mx-auto animate-pulse">
+          <div className="h-96 bg-slate-100 rounded-[2rem]" />
         </main>
       </div>
     );
   }
 
   const eventDate = new Date(currentEvent.event_date);
-  const formattedDate = eventDate.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-  const formattedTime = eventDate.toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const formattedDate = eventDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const formattedTime = eventDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   const weekday = eventDate.toLocaleDateString('vi-VN', { weekday: 'long' });
 
-  const handleBuyTickets = async () => {
-    router.push(`/booking/${eventId}`);
-  };
-
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-indigo-100">
       <TopNavBar />
 
-      <main className="pt-28 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
-        {/* Hero Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-16">
-          <div className="lg:col-span-5 space-y-6">
-            {/* Status Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-fixed-dim text-on-primary-fixed rounded-full text-xs font-semibold uppercase tracking-wider">
-              <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+      <main className="pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
+        {/* --- HERO SECTION --- */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20">
+          <div className="lg:col-span-5 space-y-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider">
+              <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
               Đang mở bán
             </div>
 
-            {/* Title */}
-            <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-extrabold text-on-surface leading-[1.1] tracking-tight">
-              {currentEvent.title}
-              <span className="text-primary"> 2024</span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
+              {currentEvent.title.includes('TicketRush') ? (
+                <>
+                  {currentEvent.title.split('TicketRush')[0]}
+                  <span className="text-indigo-600">TicketRush</span>
+                  {currentEvent.title.split('TicketRush')[1]}
+                </>
+              ) : currentEvent.title}
+              <span className="text-slate-900"> 2024</span>
             </h1>
 
-            {/* Date & Location */}
-            <div className="space-y-4 py-4">
+            <div className="space-y-5">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary flex-shrink-0">
-                  <span className="material-symbols-outlined">calendar_today</span>
+                <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">calendar_today</span>
                 </div>
                 <div>
-                  <p className="font-headline font-bold text-lg">
-                    {formattedDate}
-                  </p>
-                  <p className="text-on-surface-variant text-sm">
-                    {formattedTime} ({weekday})
-                  </p>
+                  <p className="font-bold text-lg text-slate-800">{formattedDate}</p>
+                  <p className="text-slate-500 text-sm">{formattedTime} ({weekday})</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary flex-shrink-0">
-                  <span className="material-symbols-outlined">location_on</span>
+                <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">location_on</span>
                 </div>
                 <div>
-                  <p className="font-headline font-bold text-lg">{currentEvent.venue}</p>
-                  <p className="text-on-surface-variant text-sm">{currentEvent.location}</p>
+                  <p className="font-bold text-lg text-slate-800">{currentEvent.venue}</p>
+                  <p className="text-slate-500 text-sm">{currentEvent.location}</p>
                 </div>
               </div>
             </div>
 
-            {/* Price & CTA */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 pt-4 border-t border-outline-variant/30">
+            <div className="flex items-center gap-8 pt-8 border-t border-slate-100">
               <div>
-                <p className="text-on-surface-variant text-sm mb-1 font-medium">Giá vé chỉ từ</p>
-                <p className="text-3xl font-headline font-black text-primary">
-                  {currentEvent.price_range.min.toLocaleString('vi-VN')}đ
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Giá vé chỉ từ</p>
+                <p className="text-3xl font-black text-indigo-600">
+                  {currentEvent.price_range?.min?.toLocaleString('vi-VN') || '0'}đ
                 </p>
               </div>
               <button
-                onClick={handleBuyTickets}
-                className="w-full sm:w-auto px-10 py-4 bg-tertiary text-white rounded-full font-headline font-bold text-lg hover:bg-tertiary-container transition-all active:scale-95 shadow-lg shadow-tertiary/20"
+                onClick={() => {
+                  sessionStorage.setItem('bookingEventId', eventId);
+                  router.push('/queue');
+                }}
+                className="px-10 py-4 bg-indigo-600 text-white rounded-full font-bold text-lg hover:bg-indigo-700 transition-all hover:shadow-xl hover:shadow-indigo-200 active:scale-95"
               >
                 Mua vé ngay
               </button>
@@ -131,214 +117,119 @@ export const EventDetailContent: React.FC<EventDetailContentProps> = ({ eventId 
 
           {/* Event Image */}
           <div className="lg:col-span-7">
-            <div className="relative group">
-              <div className="absolute -inset-2 bg-gradient-to-tr from-primary/10 to-tertiary/10 rounded-[2.5rem] blur-2xl group-hover:blur-3xl transition-all duration-500"></div>
-              <div className="relative rounded-[2rem] overflow-hidden aspect-[16/10] shadow-[0_20px_40px_rgba(48,30,201,0.06)]">
-                <img
-                  alt={currentEvent.title}
-                  className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
-                  src={currentEvent.image_url}
-                />
-              </div>
+            <div className="relative rounded-[2.5rem] overflow-hidden aspect-[16/10] shadow-2xl shadow-indigo-100 group">
+              <img
+                alt={currentEvent.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                src={currentEvent.image_url}
+              />
+              <div className="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-[2.5rem]"></div>
             </div>
           </div>
         </section>
 
-        {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-12">
-            {/* Introduction Section */}
+        {/* --- MAIN CONTENT AREA --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+          <div className="lg:col-span-2 space-y-16">
+            {/* Introduction */}
             <section>
-              <h2 className="font-headline text-2xl font-extrabold mb-6 flex items-center gap-3">
-                <span className="w-8 h-[2px] bg-primary"></span>
+              <h2 className="text-xl font-black mb-6 flex items-center gap-3">
+                <span className="w-8 h-[2px] bg-indigo-600"></span>
                 Giới thiệu sự kiện
               </h2>
-              <div className="space-y-4 text-on-surface-variant leading-relaxed text-lg">
+              <div className="text-slate-600 leading-relaxed text-base space-y-4">
                 <p>{currentEvent.description}</p>
-                {currentEvent.rules && currentEvent.rules.length > 0 && (
-                  <div>
-                    <h3 className="font-bold text-on-surface mb-3">Quy tắc sự kiện:</h3>
-                    <ul className="space-y-2">
-                      {currentEvent.rules.map((rule, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-primary mt-1">•</span>
-                          <span>{rule}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             </section>
 
-            {/* Details Section */}
+            {/* Details */}
             <section>
-              <h2 className="font-headline text-2xl font-extrabold mb-6 flex items-center gap-3">
-                <span className="w-8 h-[2px] bg-primary"></span>
+              <h2 className="text-xl font-black mb-8 flex items-center gap-3">
+                <span className="w-8 h-[2px] bg-indigo-600"></span>
                 Thông tin chi tiết
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Check-in Rules */}
-                <div className="p-6 bg-surface-container-low rounded-xl">
-                  <h3 className="font-headline font-bold text-primary mb-4">Quy định check-in</h3>
-                  <ul className="text-on-surface-variant space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">verified</span>
-                      Vui lòng mang theo vé điện tử (QR Code)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">verified</span>
-                      Cổng sẽ mở từ 17:00
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">verified</span>
-                      Mang theo CCCD/Hộ chiếu để xác minh
-                    </li>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                  <h3 className="font-bold text-indigo-600 mb-5 uppercase text-xs tracking-widest">Quy định check-in</h3>
+                  <ul className="space-y-4">
+                    {['Vui lòng mang theo vé điện tử (QR Code)', 'Cổng sẽ mở từ 17:00', 'Mang theo CCCD/Hộ chiếu để xác minh'].map((text, idx) => (
+                      <li key={idx} className="flex items-center gap-3 text-sm text-slate-600 font-medium">
+                        <span className="material-symbols-outlined text-slate-400 text-lg">check_circle</span>
+                        {text}
+                      </li>
+                    ))}
                   </ul>
                 </div>
 
-                {/* Prohibited Items */}
-                <div className="p-6 bg-surface-container-low rounded-xl">
-                  <h3 className="font-headline font-bold text-primary mb-4">Vật dụng bị cấm</h3>
-                  <ul className="text-on-surface-variant space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">block</span>
-                      Các loại chất cấm, chất gây cháy nổ
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">block</span>
-                      Vũ khí hoặc vật dụng sắc nhọn
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">block</span>
-                      Máy quay phim chuyên nghiệp
-                    </li>
+                <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                  <h3 className="font-bold text-indigo-600 mb-5 uppercase text-xs tracking-widest">Vật dụng bị cấm</h3>
+                  <ul className="space-y-4">
+                    {['Các loại chất cấm, chất gây cháy nổ', 'Vũ khí hoặc vật dụng sắc nhọn', 'Máy quay phim chuyên nghiệp'].map((text, idx) => (
+                      <li key={idx} className="flex items-center gap-3 text-sm text-slate-600 font-medium">
+                        <span className="material-symbols-outlined text-slate-400 text-lg">block</span>
+                        {text}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
             </section>
           </div>
 
-          {/* Right Sidebar */}
-          <aside className="space-y-8">
+          {/* --- SIDEBAR --- */}
+          <aside className="space-y-10">
             {/* Summary Card */}
-            <div className="bg-surface-container-lowest rounded-[1.5rem] p-8 shadow-sm border border-outline-variant/10">
-              <h3 className="font-headline text-xl font-bold mb-6">Tóm tắt sự kiện</h3>
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="text-primary flex-shrink-0">
-                    <span className="material-symbols-outlined">person</span>
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+              <h3 className="text-lg font-black mb-8">Tóm tắt sự kiện</h3>
+              <div className="space-y-8">
+                {[
+                  { icon: 'person', label: 'Đối tượng', value: 'Mọi lứa tuổi (Dưới 12 tuổi cần người giám hộ)' },
+                  { icon: 'confirmation_number', label: 'Loại vé', value: 'GA, VIP, VVIP (Limited Edition)' },
+                  { icon: 'language', label: 'Ngôn ngữ', value: 'Tiếng Việt & Tiếng Anh' }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-4">
+                    <span className="material-symbols-outlined text-indigo-600">{item.icon}</span>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.label}</p>
+                      <p className="text-sm font-bold text-slate-800">{item.value}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-on-surface-variant font-medium uppercase tracking-tighter">
-                      Đối tượng
-                    </p>
-                    <p className="font-medium">Mọi lứa tuổi</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="text-primary flex-shrink-0">
-                    <span className="material-symbols-outlined">confirmation_number</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-on-surface-variant font-medium uppercase tracking-tighter">
-                      Loại vé
-                    </p>
-                    <p className="font-medium">GA, VIP, VVIP</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="text-primary flex-shrink-0">
-                    <span className="material-symbols-outlined">language</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-on-surface-variant font-medium uppercase tracking-tighter">
-                      Ngôn ngữ
-                    </p>
-                    <p className="font-medium">Tiếng Việt &amp; Tiếng Anh</p>
-                  </div>
-                </div>
+                ))}
               </div>
-
-              <button className="w-full mt-8 py-3 bg-primary text-white rounded-full font-headline font-bold hover:bg-primary-container transition-all active:scale-95">
+              <button className="w-full mt-10 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all active:scale-[0.98]">
                 Tải Sơ đồ Sân khấu
               </button>
             </div>
 
             {/* Partner Offers */}
-            <div className="bg-gradient-to-br from-primary to-tertiary p-[1px] rounded-[1.5rem] overflow-hidden">
-              <div className="bg-surface-container-lowest h-full p-8 rounded-[1.45rem]">
-                <h3 className="font-headline text-xl font-bold mb-6 flex items-center justify-between">
-                  Ưu đãi đối tác
-                  <span className="material-symbols-outlined text-tertiary">featured_seasonal_and_gifts</span>
-                </h3>
-
-                <div className="space-y-4">
-                  {/* MB Bank */}
-                  <div className="flex items-center gap-4 p-4 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer group">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm font-black text-blue-800 text-xs italic flex-shrink-0">
-                      MB
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-sm">MB Bank</p>
-                      <p className="text-xs text-on-surface-variant">Giảm 15% tối đa 200k</p>
-                    </div>
-                    <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
-                      arrow_forward_ios
-                    </span>
-                  </div>
-
-                  {/* ShopeePay */}
-                  <div className="flex items-center gap-4 p-4 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer group">
-                    <div className="w-12 h-12 bg-[#ee4d2d] rounded-full flex items-center justify-center shadow-sm text-white font-black text-xs italic flex-shrink-0">
-                      SP
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-sm">ShopeePay</p>
-                      <p className="text-xs text-on-surface-variant">Hoàn xu 10% khi đặt vé</p>
-                    </div>
-                    <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
-                      arrow_forward_ios
-                    </span>
-                  </div>
-                </div>
-
-                <p className="mt-6 text-[10px] text-center text-on-surface-variant uppercase tracking-widest font-bold">
-                  Chương trình có hạn
-                </p>
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-black">Ưu đãi đối tác</h3>
+                <span className="material-symbols-outlined text-indigo-600">featured_seasonal_and_gifts</span>
               </div>
+
+              <div className="space-y-3">
+                {[
+                  { name: 'MB Bank', desc: 'Giảm 15% tối đa 200k', code: 'MB', color: 'text-blue-700 bg-blue-50' },
+                  { name: 'ShopeePay', desc: 'Hoàn xu 10% khi đặt vé', code: 'SP', color: 'text-orange-600 bg-orange-50' }
+                ].map((partner, idx) => (
+                  <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-transparent hover:border-indigo-100 hover:bg-white transition-all cursor-pointer group">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-xs italic flex-shrink-0 ${partner.color}`}>
+                      {partner.code}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-slate-800">{partner.name}</p>
+                      <p className="text-xs text-slate-500 font-medium">{partner.desc}</p>
+                    </div>
+                    <span className="material-symbols-outlined text-slate-300 group-hover:translate-x-1 transition-transform text-sm">arrow_forward_ios</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-6 text-[10px] text-center text-slate-400 uppercase tracking-[0.2em] font-bold">Chương trình có hạn</p>
             </div>
           </aside>
         </div>
       </main>
-
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-100 dark:border-slate-800 flex justify-around items-center py-3 z-50">
-        <a
-          className="flex flex-col items-center text-primary font-bold"
-          href="/events"
-        >
-          <span className="material-symbols-outlined">explore</span>
-          <span className="text-[10px]">Khám phá</span>
-        </a>
-        <a
-          className="flex flex-col items-center text-slate-400 dark:text-slate-500"
-          href="/tickets"
-        >
-          <span className="material-symbols-outlined">confirmation_number</span>
-          <span className="text-[10px]">Vé của tôi</span>
-        </a>
-        <a
-          className="flex flex-col items-center text-slate-400 dark:text-slate-500"
-          href="#"
-        >
-          <span className="material-symbols-outlined">person</span>
-          <span className="text-[10px]">Cá nhân</span>
-        </a>
-      </nav>
     </div>
   );
 };

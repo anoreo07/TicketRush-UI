@@ -10,23 +10,31 @@ import { useBookingContext } from '@/lib/context/BookingContext';
 
 export default function BookingPageContent() {
     const searchParams = useSearchParams();
-    const eventId = searchParams.get('eventId');
-    const { setEventId } = useBookingContext();
-    
+    const [eventId, setEventId] = useState<string | null>(null);
     const [event, setEvent] = useState<EventDetail | null>(null);
     const [seatMap, setSeatMap] = useState<SeatMap | null>(null);
-    const [isLoading, setIsLoading] = useState(!!eventId);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const { setEventId: setEventIdContext } = useBookingContext();
+    
+    // Get eventId from searchParams or sessionStorage
     useEffect(() => {
-        if (eventId) {
-            setEventId(eventId);
+        console.log('🔍 BookingPageContent: Getting eventId...');
+        const id = searchParams.get('eventId') || sessionStorage.getItem('bookingEventId');
+        console.log('📍 EventId found:', id);
+        if (id) {
+            setEventId(id);
+            setEventIdContext(id);
+        } else {
+            console.warn('⚠️ No eventId found!');
         }
-    }, [eventId, setEventId]);
+    }, [searchParams, setEventIdContext]);
 
+    // Load event data when eventId changes
     useEffect(() => {
+        console.log('📡 Loading event with ID:', eventId);
         if (!eventId) {
-            // Use mock data if no eventId
+            console.log('⚠️ No eventId, skipping load');
             setIsLoading(false);
             return;
         }
@@ -35,16 +43,18 @@ export default function BookingPageContent() {
             try {
                 setIsLoading(true);
                 setError(null);
+                console.log('🔄 Fetching event data and seats for:', eventId);
                 const [eventData, seatMapData] = await Promise.all([
                     eventsApi.getById(eventId),
-                    eventsApi.getSeats(eventId),
+                    (eventsApi as any).getSeats?.(eventId) as Promise<SeatMap>,
                 ]);
+                console.log('✅ Event loaded:', eventData);
+                console.log('✅ Seats loaded:', seatMapData);
                 setEvent(eventData);
                 setSeatMap(seatMapData);
             } catch (err: any) {
-                console.error('Failed to load event:', err);
+                console.error('❌ Failed to load event:', err);
                 setError(err?.message || 'Không thể tải sự kiện');
-                // Fallback to mock data on error
             } finally {
                 setIsLoading(false);
             }

@@ -7,10 +7,11 @@
 'use client';
 
 import React from 'react';
+import { Event } from '@/lib/api/events';
 import { MockEvent } from './mockData';
 
 interface ExploreAllProps {
-  events: MockEvent[];
+  events: (Event & Partial<MockEvent>) [] | MockEvent[] | any[];
 }
 
 export default function ExploreAll({ events }: ExploreAllProps) {
@@ -38,13 +39,28 @@ export default function ExploreAll({ events }: ExploreAllProps) {
   );
 }
 
-function ExploreCard({ event }: { event: MockEvent }) {
+function ExploreCard({ event }: { event: any }) {
+  const image = (event as any).image_url || (event as any).image || 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop';
+  const price = (event as any).price_range?.min || (event as any).price?.min || 0;
+  const priceDisplay = price > 0 ? `${(price / 1000000).toFixed(0)}k` : 'Miễn phí';
+  const dateStr = (event as any).event_date || (event as any).start_time || (event as any).date;
+  const categoryLabel = (event as any).categoryLabel || (event as any).category || 'Sự kiện';
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return `${d.getDate()} Tháng ${d.getMonth() + 1}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition-shadow">
       {/* Image */}
       <div className="h-40 overflow-hidden bg-gray-200">
         <img
-          src={event.image}
+          src={image}
           alt={event.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
@@ -54,20 +70,18 @@ function ExploreCard({ event }: { event: MockEvent }) {
       <div className="p-4 space-y-2">
         {/* Category Tag */}
         <p className="text-indigo-600 text-xs font-bold uppercase tracking-wider">
-          {event.categoryLabel}
+          {categoryLabel}
         </p>
 
         {/* Title */}
-        <h5 className="font-bold text-base text-slate-900 line-clamp-2">
+        <h5 className="font-bold text-base text-gray-900 line-clamp-2">
           {event.title}
         </h5>
 
         {/* Footer with Date & Price */}
         <div className="flex items-center justify-between text-xs font-medium pt-2 border-t border-gray-200">
-          <span className="text-gray-600">{event.date}</span>
-          <span className="text-slate-900 font-bold">
-            {event.price.min > 0 ? `${(event.price.min / 1000000).toFixed(0)}k` : 'Miễn phí'}
-          </span>
+          <span className="text-gray-600">{formatDate(dateStr)}</span>
+          <span className="text-gray-900 font-bold">{priceDisplay}</span>
         </div>
       </div>
     </div>

@@ -61,6 +61,8 @@ export const apiFetch = async <T = any>(
 ): Promise<T> => {
   try {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+    console.log('🌐 Fetching URL:', url);
+    console.log('🌐 API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
     
     const response = await fetch(url, {
       headers: {
@@ -72,11 +74,13 @@ export const apiFetch = async <T = any>(
 
     return await handleApiResponse<T>(response);
   } catch (error) {
+    console.error('❌ Fetch error:', error);
     if (error instanceof ApiError) {
       throw error;
     }
 
     if (error instanceof TypeError) {
+      console.error('❌ TypeError caught - network error');
       throw new ApiError(
         'Không thể kết nối đến server. Vui lòng kiểm tra kết nối.',
         'NETWORK_ERROR',
@@ -104,6 +108,7 @@ export const apiAuthFetch = async <T = any>(
   return apiFetch<T>(endpoint, {
     ...options,
     headers: {
+      'Content-Type': 'application/json',
       ...options?.headers,
       ...(token && { Authorization: `Bearer ${token}` }),
     },

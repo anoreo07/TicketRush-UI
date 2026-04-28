@@ -16,7 +16,7 @@ export interface Event {
   location: string;
   venue: string;
   image_url: string;
-  price_range: {
+  price_range?: {
     min: number;
     max: number;
   };
@@ -159,57 +159,58 @@ export const eventsApi = {
 export const adminEventsApi = {
   /**
    * Create new event
-   * POST /api/v1/admin/events
+   * POST /api/v1/events/admin
    */
   create: (payload: {
     title: string;
     description: string;
-    event_date: string;
+    start_time: string;
     location: string;
-    venue: string;
-    image_url: string;
-    total_seats: number;
-    categories?: string[];
+    matrix_config: {
+      rows: number;
+      cols: number;
+    };
+    seat_price: number;
   }) =>
-    apiAuthFetch<Event>('/admin/events', {
+    apiAuthFetch<Event>('/events/admin', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
   /**
    * Update event
-   * PATCH /api/v1/admin/events/:id
+   * PATCH /api/v1/events/admin/:id
    */
   update: (eventId: string, payload: Partial<Event>) =>
-    apiAuthFetch<Event>(`/admin/events/${eventId}`, {
+    apiAuthFetch<Event>(`/events/admin/${eventId}`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
 
   /**
    * Publish event
-   * PATCH /api/v1/admin/events/:id/publish
+   * PATCH /api/v1/events/admin/:id/publish
    */
   publish: (eventId: string) =>
-    apiAuthFetch<Event>(`/admin/events/${eventId}/publish`, {
+    apiAuthFetch<Event>(`/events/admin/${eventId}/publish`, {
       method: 'PATCH',
     }),
 
   /**
    * Cancel event
-   * PATCH /api/v1/admin/events/:id/cancel
+   * PATCH /api/v1/events/admin/:id/cancel
    */
   cancel: (eventId: string) =>
-    apiAuthFetch<Event>(`/admin/events/${eventId}/cancel`, {
+    apiAuthFetch<Event>(`/events/admin/${eventId}/cancel`, {
       method: 'PATCH',
     }),
 
   /**
    * Delete event
-   * DELETE /api/v1/admin/events/:id
+   * DELETE /api/v1/events/admin/:id
    */
   delete: (eventId: string) =>
-    apiAuthFetch(`/admin/events/${eventId}`, {
+    apiAuthFetch(`/events/admin/${eventId}`, {
       method: 'DELETE',
     }),
 };

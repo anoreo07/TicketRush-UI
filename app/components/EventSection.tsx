@@ -80,7 +80,7 @@ export default function EventSection() {
             title={event.title}
             date={new Date(event.event_date).toLocaleString('vi-VN')}
             location={event.venue || event.location}
-            price={`Từ ${event.price_range.min.toLocaleString()}đ`}
+            price={event.price_range ? `Từ ${event.price_range.min.toLocaleString()}đ` : 'Chưa xác định'}
             image={event.image_url}
           />
         ))}

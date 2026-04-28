@@ -68,7 +68,7 @@ export default function EventCard({
   }
 
   return (
-    <Link href={eventId ? `/booking?eventId=${eventId}` : "#"}>
+    <Link href={eventId ? `/events/${eventId}` : "#"}>
       <article className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 cursor-pointer">
         <div className="aspect-[3/4] overflow-hidden relative">
           <img

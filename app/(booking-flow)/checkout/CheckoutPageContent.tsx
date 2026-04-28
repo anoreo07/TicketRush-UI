@@ -23,8 +23,19 @@ export default function CheckoutPageContent() {
   const handleConfirmPayment = async () => {
     try {
       await confirmBooking(selectedPayment);
-      // Redirect to success/tickets page
-      router.push('/tickets');
+      
+      // Store booking details in sessionStorage for success page
+      if (booking) {
+        sessionStorage.setItem('bookingDetails', JSON.stringify({
+          bookingId: booking.id,
+          eventTitle: booking.event_id,
+          seatCount: booking.seats?.length || 0,
+          totalAmount: booking.total_amount || 0,
+        }));
+      }
+      
+      // Redirect to success page
+      router.push('/success');
     } catch (err) {
       console.error('Payment confirmation failed:', err);
     }

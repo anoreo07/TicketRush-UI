@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   description: 'Xem chi tiết sự kiện và mua vé online',
 };
 
-export default function EventDetailPage({ params }: EventDetailPageProps) {
-  return <EventDetailContent eventId={params.id} />;
+export default async function EventDetailPage({ params }: EventDetailPageProps) {
+  // In Next.js 14+, params might be a Promise
+  const resolvedParams = await Promise.resolve(params);
+  console.log('📖 EventDetailPage - params:', resolvedParams);
+  console.log('📖 EventDetailPage - eventId:', resolvedParams.id);
+  return <EventDetailContent eventId={resolvedParams.id} />;
 }

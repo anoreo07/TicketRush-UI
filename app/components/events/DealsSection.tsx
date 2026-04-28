@@ -7,10 +7,11 @@
 'use client';
 
 import React from 'react';
+import { Event } from '@/lib/api/events';
 import { MockEvent } from './mockData';
 
 interface DealsSectionProps {
-  events: MockEvent[];
+  events: (Event & Partial<MockEvent>) [] | MockEvent[] | any[];
 }
 
 export default function DealsSection({ events }: DealsSectionProps) {
@@ -39,24 +40,36 @@ export default function DealsSection({ events }: DealsSectionProps) {
   );
 }
 
-function DealCard({ event }: { event: MockEvent }) {
-  const originalPrice = event.price.original || event.price.max;
-  const currentPrice = event.price.max;
+function DealCard({ event }: { event: any }) {
+  const originalPrice = (event as any).price?.original || (event as any).price_range?.max || (event as any).price?.max || 0;
+  const currentPrice = (event as any).price_range?.max || (event as any).price?.max || 0;
+  const discount = (event as any).discount || 0;
+  const image = (event as any).image_url || (event as any).image || 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop';
+  const dateStr = (event as any).event_date || (event as any).start_time || (event as any).date;
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return `${d.getDate()} Tháng ${d.getMonth() + 1}`;
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <div className="min-w-[360px] md:min-w-[380px] bg-white rounded-2xl flex overflow-hidden shadow-md hover:shadow-lg transition-shadow group">
       {/* Image Section - 1/3 */}
       <div className="w-1/3 relative overflow-hidden bg-gray-200 flex-shrink-0">
         <img
-          src={event.image}
+          src={image}
           alt={event.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
 
         {/* Discount Badge */}
-        {event.discount && event.discount > 0 && (
+        {discount && discount > 0 && (
           <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-            -{event.discount}%
+            -{discount}%
           </div>
         )}
       </div>
@@ -65,10 +78,10 @@ function DealCard({ event }: { event: MockEvent }) {
       <div className="w-2/3 p-5 flex flex-col justify-between">
         {/* Title & Info */}
         <div>
-          <h4 className="font-bold text-base leading-tight mb-2 line-clamp-2 text-slate-900">
+          <h4 className="font-bold text-base leading-tight mb-2 line-clamp-2 text-gray-900">
             {event.title}
           </h4>
-          <p className="text-gray-600 text-sm mb-1">{event.date}</p>
+          <p className="text-gray-600 text-sm mb-1">{formatDate(dateStr)}</p>
           <p className="text-gray-500 text-xs">{event.location}</p>
         </div>
 

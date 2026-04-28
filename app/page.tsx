@@ -5,6 +5,9 @@ import LandingPageContent from '@/app/components/LandingPageContent';
 export const metadata = {
   title: 'TicketRush - Kiến tạo khoảnh khắc, Kết nối đam mê',
   description: 'Nền tảng quản lý và đặt vé sự kiện chuyên nghiệp',
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function LandingPage() {

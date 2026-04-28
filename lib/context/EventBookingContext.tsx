@@ -75,6 +75,9 @@ export const EventBookingProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const selectEvent = useCallback(
     async (eventId: string) => {
       try {
+        console.log('🎯 selectEvent called with eventId:', eventId);
+        console.log('🎯 selectEvent eventId type:', typeof eventId);
+        console.log('🎯 selectEvent eventId length:', eventId?.length);
         setSelectedEventId(eventId);
         await eventsHook.loadEvent(eventId);
         setStage('seat-selection');

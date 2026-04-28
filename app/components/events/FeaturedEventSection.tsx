@@ -8,8 +8,10 @@
 import React, { useState, useEffect } from 'react';
 import { useEventBooking } from '@/lib/context/EventBookingContext';
 import { Ticket } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function FeaturedEventSection() {
+  const router = useRouter();
   const { events = [] } = useEventBooking();
   const [featuredEvent, setFeaturedEvent] = useState(events[0] || null);
 
@@ -18,6 +20,12 @@ export default function FeaturedEventSection() {
       setFeaturedEvent(events[0]);
     }
   }, [events]);
+
+  const handleBooking = () => {
+    if (featuredEvent?.id) {
+      router.push(`/events/${featuredEvent.id}`);
+    }
+  };
 
   if (!featuredEvent) return null;
 
@@ -61,7 +69,10 @@ export default function FeaturedEventSection() {
 
           {/* CTA */}
           <div className="flex items-center gap-6 flex-wrap">
-            <button className="bg-white text-primary px-8 py-4 rounded-full font-bold text-lg hover:bg-primary hover:text-white transition-all active:scale-95 flex items-center gap-2">
+            <button 
+              onClick={handleBooking}
+              className="bg-white text-primary px-8 py-4 rounded-full font-bold text-lg hover:bg-primary hover:text-white transition-all active:scale-95 flex items-center gap-2"
+            >
               Đặt vé ngay
               <Ticket className="h-5 w-5" />
             </button>

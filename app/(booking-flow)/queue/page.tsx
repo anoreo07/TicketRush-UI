@@ -27,6 +27,13 @@ export default function QueuePage() {
       if (queuePosition === 1 && bookingStatus === 'processing') {
         setTimeout(() => {
           setBookingStatus('completed');
+          // Auto redirect to booking after 2 seconds
+          setTimeout(() => {
+            const eventId = sessionStorage.getItem('bookingEventId');
+            if (eventId) {
+              router.push(`/booking`);
+            }
+          }, 2000);
         }, 2000);
       }
     }, 1000);

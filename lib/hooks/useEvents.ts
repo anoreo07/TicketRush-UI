@@ -118,7 +118,15 @@ export const useEvents = () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      console.log('🔄 Fetching seat map for event:', eventId);
+      console.log('🔄 eventId type:', typeof eventId);
+      console.log('🔄 eventId length:', eventId?.length);
+      console.log('🔄 eventId falsy?:', !eventId);
+      if (!eventId) {
+        throw new Error('eventId is required');
+      }
       const seatMap = await eventsApi.getSeats(eventId);
+      console.log('✅ Seat map loaded:', seatMap);
       setState(prev => ({
         ...prev,
         seatMap,
@@ -127,6 +135,7 @@ export const useEvents = () => {
 
       return seatMap;
     } catch (err) {
+      console.error('❌ Failed to fetch seat map:', err);
       const errorMsg = err instanceof ApiError ? err.message : 'Không thể tải sơ đồ ghế';
       setState(prev => ({
         ...prev,
