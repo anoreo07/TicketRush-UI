@@ -56,6 +56,10 @@ export default function TopNavBar({ hiddenLinks = false }: TopNavBarProps) {
           )}
         </div>
         <div className="flex items-center gap-4">
+          <Link href="/drafts" className="p-2 text-slate-600 hover:text-indigo-600 hover:scale-95 duration-200 transition-all">
+            <span className="material-symbols-outlined">receipt_long</span>
+          </Link>
+          
           <button className="p-2 text-slate-600 hover:scale-95 duration-200">
             <span className="material-symbols-outlined">notifications</span>
           </button>

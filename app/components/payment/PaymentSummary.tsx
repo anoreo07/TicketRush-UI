@@ -7,13 +7,20 @@ import { useBookingContext } from '@/lib/context/BookingContext';
 
 export const PaymentSummary = () => {
   const router = useRouter();
-  const { booking, isLoading, error, confirmBooking } = useBookingContext();
+  const { booking, isLoading, error, confirmBooking, timeLeft } = useBookingContext();
   const [selectedPayment, setSelectedPayment] = useState('credit_card');
+
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return '--:--';
+    const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const ss = String(seconds % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
+  };
 
   const handlePayment = async () => {
     try {
       await confirmBooking(selectedPayment);
-      router.push('/tickets');
+      router.push(`/success?bookingId=${booking?.id}`);
     } catch (err) {
       console.error('Payment failed:', err);
     }
@@ -22,7 +29,15 @@ export const PaymentSummary = () => {
   return (
     <aside className="lg:col-span-4 space-y-6">
       <div className="bg-white rounded-3xl p-8 shadow-md border border-gray-200">
-        <h3 className="text-lg font-headline font-bold text-gray-800 mb-6">Tóm tắt chi phí</h3>
+        <div className="flex items-center justify-between mb-6 pb-2 border-b border-gray-100">
+          <h3 className="text-lg font-headline font-bold text-gray-800">Tóm tắt chi phí</h3>
+          <div className={`flex items-center gap-1.5 font-bold text-sm ${
+            timeLeft !== null && timeLeft <= 120 ? 'text-red-500' : 'text-amber-500'
+          }`}>
+            <span className="material-symbols-outlined text-base">schedule</span>
+            <span>{formatTime(timeLeft)}</span>
+          </div>
+        </div>
 
         {/* Error Message */}
         {error && (

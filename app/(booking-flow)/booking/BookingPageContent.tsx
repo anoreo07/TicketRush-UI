@@ -21,7 +21,12 @@ export default function BookingPageContent() {
   const [isLoadingSeats, setIsLoadingSeats] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setEventId: setEventIdContext, setSeatMap: setSeatMapContext } = useBookingContext();
+  const { 
+    setEventId: setEventIdContext, 
+    setSeatMap: setSeatMapContext,
+    refreshSeatMap: refreshSeatMapContext,
+    refreshTrigger 
+  } = useBookingContext();
 
   // Step 0: Check authentication
   useEffect(() => {
@@ -76,7 +81,7 @@ export default function BookingPageContent() {
 
   useEffect(() => {
     fetchSeatMap();
-  }, [fetchSeatMap]);
+  }, [fetchSeatMap, refreshTrigger]);
 
   // Loading event info skeleton
   if (isLoadingEvent) {

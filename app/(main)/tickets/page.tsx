@@ -73,7 +73,7 @@ export default function TicketsPage() {
     const fetchTickets = async () => {
       setIsLoading(true);
       try {
-        const response = await bookingApi.getUserTickets();
+        const response = await bookingApi.getMyTickets();
         
         // Map backend response to Ticket interface
         const mappedTickets: Ticket[] = response.map((item: any) => ({

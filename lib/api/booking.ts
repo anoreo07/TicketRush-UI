@@ -90,20 +90,23 @@ export const bookingApi = {
     }),
 
   /**
-   * Get user's bookings
+   * Get user's purchased tickets
+   * GET /api/v1/bookings/my-tickets
    */
-  getMyBookings: () =>
-    apiAuthFetch<BookingResponse[]>('/bookings/my-bookings', {
+  getMyTickets: () =>
+    apiAuthFetch<TicketResponse[]>('/bookings/my-tickets', {
       method: 'GET',
     }),
 
   /**
-   * Get user's tickets - GET /users/me/tickets
+   * Get user's bookings (pending, etc)
+   * GET /api/v1/bookings/my-bookings
    */
-  getMyTickets: () =>
-    apiAuthFetch<TicketResponse[]>('/users/me/tickets', {
+  getMyBookings: (status = 'pending') =>
+    apiAuthFetch<BookingResponse[]>(`/bookings/my-bookings?status=${status}`, {
       method: 'GET',
     }),
+
 
   /**
    * Cancel booking
@@ -118,14 +121,6 @@ export const bookingApi = {
    */
   getAvailableSeats: (eventId: string) =>
     apiAuthFetch(`/events/${eventId}/seats`, {
-      method: 'GET',
-    }),
-
-  /**
-   * Get user's tickets
-   */
-  getUserTickets: () =>
-    apiAuthFetch('/bookings/my-tickets', {
       method: 'GET',
     }),
 };

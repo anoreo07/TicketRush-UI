@@ -5,24 +5,24 @@ import { useRouter } from 'next/navigation';
 import TopNavBar from '@/app/components/TopNavBar';
 import Footer from '@/app/components/Footer'; // Sử dụng component có sẵn
 
-// Thông tin sự kiện mô phỏng
-const EVENT_DATA = {
-  title: "VCT Pacific Stage 1 Finals",
-  location: "Nhà thi đấu Quân khu 7, TP. Hồ Chí Minh",
-  date: "25 Th05, 2024",
-  time: "18:00",
-  category: "Esports",
-  imageUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"
-};
+import { eventsApi, Event } from '@/lib/api/events';
 
 export default function QueuePage() {
   const router = useRouter();
+  const [event, setEvent] = useState<Event | null>(null);
 
   // Logic Hàng chờ từ code cũ của bạn
   const [queuePosition, setQueuePosition] = useState(10);
   const [totalInQueue] = useState(2000);
   const [bookingStatus, setBookingStatus] = useState<'processing' | 'completed'>('processing');
   const [elapsedTime, setElapsedTime] = useState(0);
+
+  useEffect(() => {
+    const eventId = sessionStorage.getItem('bookingEventId');
+    if (eventId) {
+      eventsApi.getById(eventId).then(setEvent).catch(console.error);
+    }
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -54,32 +54,34 @@ export default function QueuePage() {
     <div className="flex flex-col min-h-screen bg-[#f7f9fb] text-[#191c1e] font-['Be_Vietnam_Pro'] antialiased">
       <TopNavBar />
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      <main className="flex-grow max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* CỘT TRÁI: TRẠNG THÁI HÀNG CHỜ */}
-          <div className="lg:col-span-7 space-y-8">
-            <div className="bg-white p-10 md:p-16 rounded-[2rem] shadow-[0_20px_40px_rgba(48,30,201,0.04)] text-center relative overflow-hidden border border-slate-100">
+          <div className="lg:col-span-7 flex flex-col gap-6">
+            <div className="flex-grow bg-white p-6 md:p-10 rounded-[2rem] shadow-[0_20px_40px_rgba(48,30,201,0.04)] text-center relative overflow-hidden border border-slate-100 flex flex-col justify-center">
 
               {/* Decorative Background */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#301ec9]/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
 
-              <div className="relative z-10 space-y-6">
-                <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider ${bookingStatus === 'completed' ? 'bg-green-100 text-green-700' : 'bg-[#e2dfff] text-[#0f0069]'
-                  }`}>
-                  <span className={`w-2 h-2 rounded-full ${bookingStatus === 'completed' ? 'bg-green-500' : 'bg-[#301ec9] animate-pulse'}`}></span>
-                  {bookingStatus === 'completed' ? 'Đã đến lượt' : 'Trực tiếp'}
-                </span>
+              <div className="relative z-10 space-y-4">
+                <div className="flex justify-center">
+                  <span className={`inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${bookingStatus === 'completed' ? 'bg-green-100 text-green-700' : 'bg-[#e2dfff] text-[#0f0069]'
+                    }`}>
+                    <span className={`w-2 h-2 rounded-full ${bookingStatus === 'completed' ? 'bg-green-500' : 'bg-[#301ec9] animate-pulse'}`}></span>
+                    {bookingStatus === 'completed' ? 'Đã đến lượt' : 'Trực tiếp'}
+                  </span>
+                </div>
 
-                <h1 className="font-['Manrope'] text-2xl md:text-3xl text-[#484554] font-semibold">
+                <h1 className="font-['Manrope'] text-xl md:text-2xl text-[#484554] font-semibold">
                   {bookingStatus === 'completed' ? 'Sẵn sàng đặt vé!' : 'Vị trí của bạn'}
                 </h1>
 
-                <div className="flex flex-col items-center justify-center py-6">
-                  <span className="font-['Manrope'] text-8xl md:text-9xl font-extrabold text-[#301ec9] tracking-tighter transition-all duration-700">
+                <div className="flex flex-col items-center justify-center py-2">
+                  <span className="font-['Manrope'] text-7xl md:text-8xl font-extrabold text-[#301ec9] tracking-tighter transition-all duration-700">
                     {bookingStatus === 'completed' ? 'GO!' : queuePosition.toLocaleString()}
                   </span>
-                  <p className="text-lg text-[#484554]/70 font-medium mt-4">
+                  <p className="text-base text-[#484554]/70 font-medium mt-2">
                     {bookingStatus === 'completed'
                       ? 'Đang chuyển hướng bạn đến trang thanh toán...'
                       : 'Người đang xếp hàng trước bạn'}
@@ -87,123 +89,119 @@ export default function QueuePage() {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="space-y-4 max-w-md mx-auto">
-                  <div className="w-full h-3 bg-[#eceef0] rounded-full overflow-hidden">
+                <div className="space-y-3 max-w-sm mx-auto">
+                  <div className="w-full h-2.5 bg-[#eceef0] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-[#301ec9] to-[#5700bf] rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(87,0,191,0.3)]"
                       style={{ width: `${bookingStatus === 'completed' ? 100 : progress}%` }}
                     ></div>
                   </div>
-                  <div className="flex justify-between text-sm font-bold text-[#484554]">
+                  <div className="flex justify-between text-[11px] font-bold text-[#484554]">
                     <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm">schedule</span>
+                      <span className="material-symbols-outlined text-xs">schedule</span>
                       {bookingStatus === 'completed' ? 'Ngay bây giờ' : `Còn khoảng ${estimatedMinutes} phút`}
                     </span>
                     <span>{Math.round(bookingStatus === 'completed' ? 100 : progress)}% Hoàn tất</span>
                   </div>
                 </div>
 
-                <div className="pt-8 border-t border-[#c9c4d7]/30">
-                  <div className={`flex items-center justify-center gap-3 py-4 px-6 rounded-2xl transition-colors ${bookingStatus === 'completed' ? 'bg-green-50 text-green-700' : 'bg-[#301ec9]/5 text-[#301ec9]'
+                <div className="pt-6 border-t border-[#c9c4d7]/30">
+                  <div className={`flex items-center justify-center gap-3 py-3 px-5 rounded-xl transition-colors ${bookingStatus === 'completed' ? 'bg-green-50 text-green-700' : 'bg-[#301ec9]/5 text-[#301ec9]'
                     }`}>
-                    <span className="material-symbols-outlined">{bookingStatus === 'completed' ? 'check_circle' : 'info'}</span>
-                    <p className="text-sm md:text-base font-bold leading-relaxed">
+                    <span className="material-symbols-outlined text-xl">{bookingStatus === 'completed' ? 'check_circle' : 'info'}</span>
+                    <p className="text-xs md:text-sm font-bold leading-relaxed">
                       {bookingStatus === 'completed'
                         ? 'Phiên làm việc đã sẵn sàng. Chúc bạn săn vé thành công!'
-                        : 'Đừng tải lại trang, chúng tôi đang giữ chỗ cho bạn. Phiên đăng nhập sẽ tự động chuyển hướng.'}
+                        : 'Đừng tải lại trang, chúng tôi đang giữ chỗ cho bạn.'}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Engagement Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-[#f2f4f6] p-6 rounded-2xl flex gap-4 border border-transparent hover:border-[#301ec9]/10 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-[#301ec9] shadow-sm shrink-0">
-                  <span className="material-symbols-outlined">verified_user</span>
-                </div>
-                <div>
-                  <h3 className="font-['Manrope'] font-bold text-[#191c1e] mb-1">Công bằng tuyệt đối</h3>
-                  <p className="text-sm text-[#484554]">Hệ thống TicketRush đảm bảo thứ tự mua vé minh bạch cho tất cả mọi người.</p>
-                </div>
+            {/* Engagement Info - Simplified for No-Scroll */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/60 p-4 rounded-2xl flex items-center gap-3 border border-white">
+                <span className="material-symbols-outlined text-[#301ec9] bg-white p-2 rounded-lg shadow-sm">verified_user</span>
+                <span className="text-[11px] font-bold text-[#191c1e]">Công bằng tuyệt đối</span>
               </div>
-              <div className="bg-[#f2f4f6] p-6 rounded-2xl flex gap-4 border border-transparent hover:border-[#301ec9]/10 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-[#301ec9] shadow-sm shrink-0">
-                  <span className="material-symbols-outlined">security</span>
-                </div>
-                <div>
-                  <h3 className="font-['Manrope'] font-bold text-[#191c1e] mb-1">Bảo mật cao</h3>
-                  <p className="text-sm text-[#484554]">Ngăn chặn bot để bảo vệ quyền lợi của người hâm mộ thực sự.</p>
-                </div>
+              <div className="bg-white/60 p-4 rounded-2xl flex items-center gap-3 border border-white">
+                <span className="material-symbols-outlined text-[#301ec9] bg-white p-2 rounded-lg shadow-sm">security</span>
+                <span className="text-[11px] font-bold text-[#191c1e]">Bảo mật TicketRush</span>
               </div>
             </div>
           </div>
 
           {/* CỘT PHẢI: CONTEXT SỰ KIỆN */}
-          <div className="lg:col-span-5 space-y-8">
-            <div className="bg-white rounded-[2rem] overflow-hidden shadow-[0_20px_40px_rgba(48,30,201,0.04)] border border-slate-100">
-              <div className="relative h-56 w-full">
-                <img
-                  alt={EVENT_DATA.title}
-                  className="w-full h-full object-cover"
-                  src={EVENT_DATA.imageUrl}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div className="absolute bottom-4 left-6">
-                  <span className="bg-[#5700bf] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                    {EVENT_DATA.category}
-                  </span>
-                </div>
+          <div className="lg:col-span-5 flex flex-col gap-6">
+            <div className="bg-white rounded-[2rem] overflow-hidden shadow-[0_20px_40px_rgba(48,30,201,0.04)] border border-slate-100 flex flex-col">
+              <div className="relative h-40 w-full shrink-0 bg-slate-100">
+                {event ? (
+                  <>
+                    <img
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                      src={event.image_url || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                    <div className="absolute bottom-3 left-4">
+                      <span className="bg-[#5700bf] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
+                        Sắp diễn ra
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full animate-pulse flex items-center justify-center">
+                    <span className="material-symbols-outlined text-slate-300">image</span>
+                  </div>
+                )}
               </div>
-              <div className="p-8 space-y-6">
+              <div className="p-6 space-y-4 flex-grow flex flex-col justify-center">
                 <div>
-                  <h2 className="font-['Manrope'] text-2xl font-black text-[#191c1e] leading-tight mb-2">
-                    {EVENT_DATA.title}
+                  <h2 className="font-['Manrope'] text-xl font-black text-[#191c1e] leading-tight mb-1">
+                    {event?.title || "Đang tải thông tin..."}
                   </h2>
-                  <p className="text-[#484554] font-bold flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-[#301ec9] text-xl">location_on</span>
-                    {EVENT_DATA.location}
+                  <p className="text-[#484554] font-bold flex items-center gap-1.5 text-xs">
+                    <span className="material-symbols-outlined text-[#301ec9] text-base">location_on</span>
+                    {event?.location || "Địa điểm tổ chức"}
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4 pt-6 border-t border-[#eceef0]">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#eceef0]">
                   <div>
-                    <p className="text-[10px] text-[#484554]/60 uppercase font-black tracking-widest mb-1">Ngày diễn ra</p>
-                    <p className="font-bold text-[#191c1e]">{EVENT_DATA.date}</p>
+                    <p className="text-[9px] text-[#484554]/60 uppercase font-black tracking-widest mb-0.5">Ngày</p>
+                    <p className="font-bold text-[#191c1e] text-xs">
+                      {event ? new Date(event.start_time).toLocaleDateString('vi-VN') : "--/--/----"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#484554]/60 uppercase font-black tracking-widest mb-1">Giờ bắt đầu</p>
-                    <p className="font-bold text-[#191c1e]">{EVENT_DATA.time}</p>
+                    <p className="text-[9px] text-[#484554]/60 uppercase font-black tracking-widest mb-0.5">Giờ</p>
+                    <p className="font-bold text-[#191c1e] text-xs">
+                      {event ? new Date(event.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : "--:--"}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-[#eceef0]/50 p-8 rounded-[2rem] space-y-6 border border-white">
-              <h3 className="font-['Manrope'] text-xl font-black text-[#191c1e] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#5700bf]">lightbulb</span>
-                Mẹo trong lúc chờ đợi
+            <div className="bg-[#eceef0]/50 p-6 rounded-[2rem] border border-white flex-grow flex flex-col justify-center">
+              <h3 className="font-['Manrope'] text-base font-black text-[#191c1e] flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined text-[#5700bf] text-xl">lightbulb</span>
+                Mẹo quan trọng
               </h3>
-              <ul className="space-y-5">
+              <ul className="space-y-3">
                 {[
-                  "Chuẩn bị sẵn thông tin thanh toán để hoàn tất đặt vé nhanh nhất.",
-                  "Kiểm tra kết nối mạng. Sử dụng Wifi ổn định thay vì 4G nếu có thể.",
-                  "Mỗi tài khoản chỉ nên mở một trình duyệt duy nhất để tránh lỗi."
+                  "Chuẩn bị sẵn thông tin thanh toán.",
+                  "Kiểm tra kết nối mạng ổn định.",
+                  "Không mở nhiều trình duyệt."
                 ].map((tip, index) => (
-                  <li key={index} className="flex gap-4 items-start">
-                    <span className="flex-shrink-0 w-6 h-6 bg-[#301ec9] text-white rounded-full text-[10px] font-black flex items-center justify-center">
+                  <li key={index} className="flex gap-3 items-center">
+                    <span className="flex-shrink-0 w-5 h-5 bg-[#301ec9] text-white rounded-full text-[9px] font-black flex items-center justify-center">
                       {index + 1}
                     </span>
-                    <p className="text-sm text-[#484554] font-medium leading-relaxed">{tip}</p>
+                    <p className="text-xs text-[#484554] font-medium">{tip}</p>
                   </li>
                 ))}
               </ul>
-              <div className="pt-4">
-                <button className="w-full py-4 border-2 border-[#301ec9]/10 text-[#301ec9] font-black rounded-2xl hover:bg-[#301ec9] hover:text-white transition-all text-sm flex items-center justify-center gap-2">
-                  Xem các câu hỏi thường gặp
-                  <span className="material-symbols-outlined text-sm">open_in_new</span>
-                </button>
-              </div>
             </div>
           </div>
         </div>

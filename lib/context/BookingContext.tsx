@@ -1,11 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookingResponse, TicketResponse } from '@/lib/api/booking';
 import { bookingApi } from '@/lib/api/booking';
 import { seatsApi } from '@/lib/api/seats';
-import { SeatMap, Seat } from '@/lib/api/events';
+import { SeatMap, Seat, Event, eventsApi } from '@/lib/api/events';
 import { ApiError } from '@/lib/api/client';
 
 interface BookingContextType {
@@ -16,6 +16,7 @@ interface BookingContextType {
   isLoading: boolean;
   error: string | null;
   eventId: string | null;
+  event: Event | null;
   tickets: TicketResponse[];
   seatMap: SeatMap | null;
 
@@ -28,6 +29,10 @@ interface BookingContextType {
   getTickets: () => Promise<TicketResponse[]>;
   setError: (error: string | null) => void;
   clearBooking: () => void;
+  loadBooking: (id: string) => Promise<void>;
+  refreshSeatMap: () => Promise<void>;
+  refreshTrigger: number;
+  timeLeft: number | null; // Seconds remaining
 }
 
 const BookingContext = createContext<BookingContextType | null>(null);
@@ -40,8 +45,26 @@ export const BookingProvider = ({ children }: { children: React.ReactNode }) => 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [eventId, setEventId] = useState<string | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [seatMap, setSeatMap] = useState<SeatMap | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  // Fetch event details when eventId changes
+  useEffect(() => {
+    if (eventId) {
+      eventsApi.getById(eventId)
+        .then(setEvent)
+        .catch(err => console.error('Failed to fetch event details:', err));
+    } else {
+      setEvent(null);
+    }
+  }, [eventId]);
+
+  const refreshSeatMap = useCallback(async () => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
 
   const lockSeat = useCallback(
     async (seat: Seat) => {
@@ -163,6 +186,73 @@ export const BookingProvider = ({ children }: { children: React.ReactNode }) => 
     []
   );
 
+  const loadBooking = useCallback(
+    async (id: string) => {
+      console.log(`[DEBUG] BookingContext: Starting loadBooking for ID: ${id}`);
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await bookingApi.getById(id);
+        console.log(`[DEBUG] BookingContext: API result received:`, JSON.stringify(result));
+        
+        // Check if expired (ensure UTC timezone parsing by appending 'Z' if missing)
+        const expiresAtStr = result.expires_at.endsWith('Z') ? result.expires_at : `${result.expires_at}Z`;
+        const expirationTime = new Date(expiresAtStr).getTime();
+        const now = new Date().getTime();
+        
+        console.log(`[DEBUG] BookingContext: expiresAtStr=${expiresAtStr}, expirationTime=${expirationTime}, now=${now}, diff=${expirationTime - now}ms`);
+        
+        if (expirationTime <= now) {
+          console.warn(`[DEBUG] BookingContext: Loaded booking is already expired`);
+          setError('Đơn hàng đã hết hạn giữ ghế. Vui lòng đặt lại.');
+          setIsLoading(false);
+          return;
+        }
+
+        setBooking(result);
+        setEventId(result.event_id);
+        
+        // Map backend seats to context seats
+        const items = result.booking_items;
+        if (items) {
+          const itemsArray = Array.isArray(items) ? items : [items];
+          console.log(`[DEBUG] BookingContext: Mapping ${itemsArray.length} items`);
+          const mappedSeats = itemsArray.map((item: any) => {
+            const seat = item.seats || item.seat;
+            return {
+              id: seat?.id || '',
+              row_index: seat?.row_index || 0,
+              col_index: seat?.col_index || 0,
+              price: item.price || 0,
+              status: 'locked' as const,
+              locked_by_user: true
+            };
+          });
+          setSelectedSeats(mappedSeats);
+          setSelectedSeatIds(mappedSeats.map(s => s.id));
+          
+          // Update booking object with seats property for UI compatibility
+          setBooking(prev => prev ? {
+            ...prev,
+            seats: mappedSeats.map(s => ({
+              id: s.id,
+              row: s.row_index,
+              number: s.col_index,
+              price: s.price
+            }))
+          } : null);
+        }
+        console.log(`[DEBUG] BookingContext: loadBooking completed successfully`);
+      } catch (err) {
+        console.error('[DEBUG] BookingContext: Failed to load booking:', err);
+        setError('Không thể tải thông tin đơn hàng');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
   const value: BookingContextType = {
     booking,
     selectedSeatIds,
@@ -170,6 +260,7 @@ export const BookingProvider = ({ children }: { children: React.ReactNode }) => 
     isLoading,
     error,
     eventId,
+    event,
     tickets,
     seatMap,
     setEventId,
@@ -180,7 +271,41 @@ export const BookingProvider = ({ children }: { children: React.ReactNode }) => 
     getTickets,
     setError,
     clearBooking,
+    loadBooking,
+    refreshSeatMap,
+    refreshTrigger,
+    timeLeft,
   };
+
+  // Timer Effect
+  useEffect(() => {
+    if (!booking || !booking.expires_at || booking.status !== 'pending') {
+      setTimeLeft(null);
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const expiresAtStr = booking.expires_at.endsWith('Z') ? booking.expires_at : `${booking.expires_at}Z`;
+      const expirationTime = new Date(expiresAtStr).getTime();
+      const now = new Date().getTime();
+      const difference = Math.max(0, Math.floor((expirationTime - now) / 1000));
+      
+      setTimeLeft(difference);
+
+      if (difference <= 0) {
+        setError('Thời gian giữ ghế đã hết hạn. Vui lòng chọn lại ghế.');
+        clearBooking();
+      }
+    };
+
+    // Initial calculation
+    calculateTimeLeft();
+
+    // Update every second
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [booking, clearBooking]);
 
   return (
     <BookingContext.Provider value={value}>

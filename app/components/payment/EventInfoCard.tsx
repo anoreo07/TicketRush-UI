@@ -1,69 +1,80 @@
 'use client';
 
 import React from 'react';
-import { mockPaymentEvent } from '@/lib/mock/booking-data';
+import { Event } from '@/lib/api/events';
+import { BookingResponse } from '@/lib/api/booking';
+import { formatCurrency } from '@/lib/mock/booking-data';
 
-export const EventInfoCard = () => {
+interface EventInfoCardProps {
+  event: Event | null;
+  booking?: BookingResponse | null;
+  seatNames?: string;
+}
+
+export const EventInfoCard = ({ event, booking, seatNames }: EventInfoCardProps) => {
+  if (!event) return null;
+
   return (
-    <section className="bg-white rounded-3xl p-8 shadow-md border border-gray-200 overflow-hidden">
+    <section className="bg-white rounded-3xl p-8 shadow-md border border-gray-200 overflow-hidden animate-fade-in">
       <div className="flex flex-col md:flex-row gap-6">
         {/* Event Image */}
         <div className="w-full md:w-40 h-40 rounded-xl overflow-hidden flex-shrink-0">
           <img
-            alt="Event Poster"
+            alt={event.title}
             className="w-full h-full object-cover"
-            src={mockPaymentEvent.image}
+            src={event.image_url || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80"}
           />
         </div>
 
         {/* Event Details */}
         <div className="flex-grow">
           <div className="flex items-center gap-2 mb-3">
-            <span className="px-3 py-1 rounded-full bg-purple-600 text-white text-[10px] font-bold uppercase tracking-widest">
-              {mockPaymentEvent.category}
-            </span>
-            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] font-medium">
+            <span className="px-3 py-1 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-widest">
               Sắp diễn ra
             </span>
           </div>
 
-          <h3 className="text-xl font-headline font-bold text-gray-800 mb-4">
-            {mockPaymentEvent.title}
+          <h3 className="text-xl font-headline font-black text-gray-900 mb-4">
+            {event.title}
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             {/* Date & Time */}
             <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-purple-600 mt-1 flex-shrink-0">calendar_today</span>
+              <span className="material-symbols-outlined text-indigo-600 mt-1 flex-shrink-0">calendar_today</span>
               <div>
                 <p className="text-xs font-bold uppercase text-gray-500 mb-1">Thời gian</p>
-                <p className="text-sm text-gray-800 font-medium">
-                  19:00, Thứ Bảy - 25/05/2024
+                <p className="text-sm text-gray-800 font-bold">
+                  {new Date(event.start_time).toLocaleString('vi-VN')}
                 </p>
               </div>
             </div>
 
             {/* Location */}
             <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-purple-600 mt-1 flex-shrink-0">location_on</span>
+              <span className="material-symbols-outlined text-indigo-600 mt-1 flex-shrink-0">location_on</span>
               <div>
                 <p className="text-xs font-bold uppercase text-gray-500 mb-1">Địa điểm</p>
-                <p className="text-sm text-gray-800 font-medium">
-                  {mockPaymentEvent.location}
+                <p className="text-sm text-gray-800 font-bold">
+                  {event.location}
                 </p>
               </div>
             </div>
 
             {/* Seats */}
-            <div className="flex items-start gap-3 sm:col-span-2">
-              <span className="material-symbols-outlined text-purple-600 mt-1 flex-shrink-0">event_seat</span>
-              <div>
-                <p className="text-xs font-bold uppercase text-gray-500 mb-1">Vị trí ghế (2 vé)</p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Khu vực GA - Dãy F - Ghế 12, Ghế 13
-                </p>
+            {(booking || seatNames) && (
+              <div className="flex items-start gap-3 sm:col-span-2">
+                <span className="material-symbols-outlined text-indigo-600 mt-1 flex-shrink-0">event_seat</span>
+                <div>
+                  <p className="text-xs font-bold uppercase text-gray-500 mb-1">
+                    Vị trí ghế ({booking?.seats?.length || 1} vé)
+                  </p>
+                  <p className="text-sm text-gray-800 font-bold">
+                    {seatNames || "Đang xử lý..."}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

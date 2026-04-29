@@ -22,31 +22,43 @@ const ZONE_LABELS = { vip: 'VIP', standard: 'Standard', economy: 'Economy' };
 const ROW_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 // Seat color based on status and zone
-const getSeatClass = (status: string, isSelectedByUser: boolean, zone: string): string => {
+const getSeatClass = (status: string, isSelectedByUser: boolean, zone: string, isLockedByOther: boolean): string => {
+  // 1. Ghế bạn đang giữ (Ưu tiên cao nhất)
   if (isSelectedByUser) {
-    return 'bg-yellow-500 hover:bg-yellow-600 text-white ring-2 ring-yellow-400 ring-offset-1 cursor-pointer scale-110';
+    return 'bg-amber-500 hover:bg-amber-600 text-white ring-2 ring-amber-400 ring-offset-2 cursor-pointer scale-110 z-10';
   }
+  
+  // 2. Ghế đã bán
   if (status === 'sold') {
-    return 'bg-red-400 text-white cursor-not-allowed opacity-40';
+    return 'bg-red-500 text-white cursor-not-allowed shadow-inner opacity-100';
   }
-  if (status === 'locked') {
-    return 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60';
+  
+  // 3. Ghế người khác đang giữ
+  if (status === 'locked' || isLockedByOther) {
+    return 'bg-slate-200 text-slate-400 cursor-not-allowed';
   }
-  // available
-  if (zone === 'vip') return 'bg-indigo-600 hover:bg-indigo-700 hover:scale-110 text-white cursor-pointer';
-  if (zone === 'economy') return 'bg-emerald-500 hover:bg-emerald-600 hover:scale-110 text-white cursor-pointer';
-  return 'bg-indigo-300 hover:bg-indigo-400 hover:scale-110 text-white cursor-pointer';
+  
+  // 4. Ghế trống (available) - Hiển thị theo Zone
+  if (zone === 'vip') return 'bg-indigo-600 hover:bg-indigo-700 hover:scale-110 text-white cursor-pointer shadow-sm';
+  if (zone === 'economy') return 'bg-emerald-500 hover:bg-emerald-600 hover:scale-110 text-white cursor-pointer shadow-sm';
+  return 'bg-indigo-300 hover:bg-indigo-400 hover:scale-110 text-white cursor-pointer shadow-sm';
 };
 
 export const SeatSelection: React.FC<SeatSelectionProps> = ({ seatMap, isLoadingSeats }) => {
-  const { lockSeat, unlockSeat, selectedSeatIds, isLoading, error: contextError } = useBookingContext();
+  const { 
+    selectedSeatIds, 
+    lockSeat, 
+    unlockSeat, 
+    isLoading,
+    refreshSeatMap,
+    error: contextError
+  } = useBookingContext();
   const [lockingErrors, setLockingErrors] = useState<Map<string, string>>(new Map());
 
   const handleSeatClick = async (seat: Seat, rowIndex: number, totalRows: number) => {
-    if (seat.status === 'sold') return;
-    if (seat.status === 'locked' && !seat.locked_by_user) return;
-
     const isSelected = selectedSeatIds.includes(seat.id);
+    
+    // Clear previous error for this seat
     setLockingErrors(prev => { const m = new Map(prev); m.delete(seat.id); return m; });
 
     if (isSelected) {
@@ -57,11 +69,23 @@ export const SeatSelection: React.FC<SeatSelectionProps> = ({ seatMap, isLoading
     const zone = getZoneByRow(rowIndex, totalRows);
     try {
       await lockSeat({ ...seat, zone, row_index: rowIndex } as any);
-    } catch (err) {
+    } catch (err: any) {
       const msg = err instanceof Error ? err.message : 'Không thể giữ ghế này';
       setLockingErrors(prev => new Map(prev).set(seat.id, msg));
+      
+      // Nếu ghế đã bán hoặc có xung đột, tải lại sơ đồ ghế ngay lập tức
+      if (msg.includes('đã bán') || msg.includes('Xung đột')) {
+        refreshSeatMap();
+      }
     }
   };
+
+  // Clear locking errors when seat map is refreshed/updated
+  React.useEffect(() => {
+    if (seatMap) {
+      setLockingErrors(new Map());
+    }
+  }, [seatMap]);
 
   // Loading state
   if (isLoadingSeats) {
@@ -123,9 +147,9 @@ export const SeatSelection: React.FC<SeatSelectionProps> = ({ seatMap, isLoading
             { color: 'bg-indigo-600', label: 'VIP (hàng đầu)' },
             { color: 'bg-indigo-300', label: 'Standard' },
             { color: 'bg-emerald-500', label: 'Economy' },
-            { color: 'bg-yellow-500', label: 'Bạn đang giữ' },
-            { color: 'bg-slate-300', label: 'Đã giữ (người khác)' },
-            { color: 'bg-red-400', label: 'Đã bán' },
+            { color: 'bg-amber-500', label: 'Bạn đang giữ' },
+            { color: 'bg-slate-200', label: 'Đã giữ (người khác)' },
+            { color: 'bg-red-500', label: 'Đã bán' },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-2">
               <div className={`w-4 h-4 rounded-sm ${color}`}></div>
@@ -156,8 +180,7 @@ export const SeatSelection: React.FC<SeatSelectionProps> = ({ seatMap, isLoading
                       const isSelected = selectedSeatIds.includes(seat.id);
                       const isSold = seat.status === 'sold';
                       const isLockedByOther = seat.status === 'locked' && !seat.locked_by_user;
-                      const hasError = lockingErrors.has(seat.id);
-                      const seatClass = getSeatClass(seat.status, isSelected, zone);
+                      const seatClass = getSeatClass(seat.status, isSelected, zone, isLockedByOther);
 
                       return (
                         <button
@@ -170,7 +193,6 @@ export const SeatSelection: React.FC<SeatSelectionProps> = ({ seatMap, isLoading
                             w-7 h-7 rounded-md transition-all duration-150 flex-shrink-0
                             text-[10px] font-bold
                             ${seatClass}
-                            ${hasError ? 'ring-2 ring-red-500 ring-offset-1' : ''}
                           `}
                         >
                           {seat.col_index + 1}
@@ -190,22 +212,6 @@ export const SeatSelection: React.FC<SeatSelectionProps> = ({ seatMap, isLoading
             );
           })}
         </div>
-
-        {/* Locking errors */}
-        {lockingErrors.size > 0 && (
-          <div className="mt-5 space-y-1">
-            {Array.from(lockingErrors.entries()).map(([id, msg]) => (
-              <p key={id} className="text-xs text-red-600 font-medium text-center">{msg}</p>
-            ))}
-          </div>
-        )}
-
-        {/* Context error */}
-        {contextError && (
-          <div className="mt-5 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm text-center font-medium">
-            {contextError}
-          </div>
-        )}
       </div>
 
       {/* Stats Bar */}

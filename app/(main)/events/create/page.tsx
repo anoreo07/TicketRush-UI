@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lightbulb, Layers } from "lucide-react";
 import TopNavBar from "@/app/components/TopNavBar";
 import Footer from "@/app/components/Footer";
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 
 export default function CreateEventPage() {
   const router = useRouter();
-  const { token } = useAuth();
+  const { token, user, isLoading: isAuthLoading } = useAuth();
   const [rows, setRows] = useState(6);
   const [cols, setCols] = useState(10);
   const [eventName, setEventName] = useState("");
@@ -21,6 +21,14 @@ export default function CreateEventPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+
+  // Check permission when user data is available
+  useEffect(() => {
+    if (!isAuthLoading && user && user.role === 'customer') {
+      setShowPermissionModal(true);
+    }
+  }, [user, isAuthLoading]);
 
   // Generate seat grid for preview
   const generateSeats = () => {
@@ -38,7 +46,7 @@ export default function CreateEventPage() {
     try {
       console.log("🚀 handleCreate called");
       console.log("📝 Form data:", { eventName, description, startTime, price, location });
-      
+
       // Validate required fields
       if (!eventName.trim()) {
         setError("Vui lòng nhập tên sự kiện");
@@ -86,9 +94,9 @@ export default function CreateEventPage() {
 
       console.log("📤 Sending payload:", payload);
       const response = await adminEventsApi.create(payload);
-      
+
       console.log("📥 Response:", response);
-      
+
       if (response?.id) {
         setSuccess(true);
         console.log("✅ Event created successfully, redirecting...");
@@ -118,12 +126,12 @@ export default function CreateEventPage() {
   return (
     <div className="flex flex-col min-h-screen w-full" style={{ fontFamily: "Manrope" }}>
       <TopNavBar />
-      <main className="flex-1 max-w-7xl mx-auto px-6 py-12 w-full">
-        <div className="mb-10">
-          <h1 className="text-4xl font-extrabold tracking-tight text-[#301ec9] mb-2" style={{ fontFamily: "Manrope" }}>
+      <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
+        <div className="mb-6">
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#301ec9] mb-1" style={{ fontFamily: "Manrope" }}>
             Tạo sự kiện mới
           </h1>
-          <p className="text-[#484554] font-medium" style={{ fontFamily: "Be Vietnam Pro" }}>
+          <p className="text-sm text-[#484554] font-medium" style={{ fontFamily: "Be Vietnam Pro" }}>
             Chia sẻ trải nghiệm tuyệt vời của bạn với cộng đồng TicketRush.
           </p>
         </div>
@@ -157,11 +165,11 @@ export default function CreateEventPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT COLUMN: Form */}
-          <div className="lg:col-span-7 space-y-8">
+          <div className="lg:col-span-7 space-y-6">
             {/* Basic Information Section */}
-            <section className="bg-white p-8 rounded-xl shadow-[0_20px_40px_rgba(48,30,201,0.04)]">
+            <section className="bg-white p-6 rounded-xl shadow-[0_20px_40px_rgba(48,30,201,0.04)]">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-[#191c1e]" style={{ fontFamily: "Manrope" }}>
                 <svg className="w-5 h-5 text-[#301ec9]" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" />
@@ -260,7 +268,7 @@ export default function CreateEventPage() {
             </section>
 
             {/* Seat Configuration Section */}
-            <section className="bg-white p-8 rounded-xl shadow-[0_20px_40px_rgba(48,30,201,0.04)]">
+            <section className="bg-white p-6 rounded-xl shadow-[0_20px_40px_rgba(48,30,201,0.04)]">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold flex items-center gap-2 text-[#191c1e]" style={{ fontFamily: "Manrope" }}>
                   <Layers className="w-5 h-5 text-[#301ec9]" />
@@ -294,8 +302,8 @@ export default function CreateEventPage() {
                   />
                 </div>
               </div>
-              <div className="bg-[#e6e8ea] rounded-xl p-8 overflow-hidden">
-                <div className="w-full h-2 bg-slate-400 rounded-full mb-12 relative">
+              <div className="bg-[#e6e8ea] rounded-xl p-6 overflow-hidden">
+                <div className="w-full h-1.5 bg-slate-400 rounded-full mb-8 relative">
                   <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-500 uppercase tracking-widest" style={{ fontFamily: "Be Vietnam Pro" }}>
                     Sân khấu / Màn hình
                   </div>
@@ -310,15 +318,14 @@ export default function CreateEventPage() {
                     {seats.map((seat) => (
                       <div
                         key={seat.id}
-                        className={`w-6 h-6 rounded-md shadow-sm ${
-                          seat.isVIP ? "bg-[#5700bf]" : "bg-[#301ec9]"
-                        }`}
+                        className={`w-6 h-6 rounded-md shadow-sm ${seat.isVIP ? "bg-[#5700bf]" : "bg-[#301ec9]"
+                          }`}
                       ></div>
                     ))}
                   </div>
                 </div>
               </div>
-              <div className="mt-10 flex justify-center gap-6 text-[11px] font-bold text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
+              <div className="mt-6 flex justify-center gap-6 text-[10px] font-bold text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-sm bg-[#5700bf]"></div> VIP
                 </div>
@@ -351,7 +358,7 @@ export default function CreateEventPage() {
           </div>
 
           {/* RIGHT COLUMN: Live Preview */}
-          <div className="lg:col-span-5 sticky top-32">
+          <div className="lg:col-span-5 sticky top-24">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-[#191c1e]" style={{ fontFamily: "Manrope" }}>
                 Xem trước hiển thị
@@ -452,6 +459,33 @@ export default function CreateEventPage() {
         </div>
       </main>
       <Footer />
+
+      {/* Permission Modal */}
+      {showPermissionModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl border border-slate-100 animate-scale-in">
+            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-black text-center text-slate-800 mb-4" style={{ fontFamily: "Manrope" }}>
+              Quyền hạn hạn chế
+            </h3>
+            <p className="text-center text-slate-600 leading-relaxed mb-8" style={{ fontFamily: "Be Vietnam Pro" }}>
+              Bạn chưa thể dùng tính năng này - Hãy tham gia một tổ chức nào đó để được ủy quyền tạo sự kiện.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="w-full bg-[#301ec9] text-white font-headline font-black py-4 rounded-full shadow-lg shadow-[#301ec9]/20 hover:opacity-90 transition-all active:scale-95"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

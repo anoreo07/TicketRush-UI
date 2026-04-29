@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { EventInfoCard } from '@/app/components/payment/EventInfoCard';
 import { PaymentMethods } from '@/app/components/payment/PaymentMethods';
 import { PaymentSummary } from '@/app/components/payment/PaymentSummary';
@@ -10,15 +10,38 @@ import { useBookingContext } from '@/lib/context/BookingContext';
 
 export default function CheckoutPageContent() {
   const router = useRouter();
-  const { booking, isLoading, error, confirmBooking } = useBookingContext();
+  const searchParams = useSearchParams();
+  const bookingId = searchParams.get('bookingId');
+  const { booking, event, isLoading, error, confirmBooking, loadBooking } = useBookingContext();
   const [selectedPayment, setSelectedPayment] = useState('credit_card');
 
+  const seatNames = booking?.seats 
+    ? booking.seats.map(s => `Dãy ${s.row} - Ghế ${s.number}`).join(', ')
+    : '';
+
+  const lastLoadedId = useRef<string | null>(null);
+
   useEffect(() => {
-    // Redirect to booking if no booking exists
-    if (!booking) {
-      router.push('/booking');
+    console.log(`[DEBUG] CheckoutPageContent: useEffect triggered. bookingId=${bookingId}, hasBooking=${!!booking}, isLoading=${isLoading}, error=${error}`);
+    
+    // If we already tried to load this ID, don't try again
+    if (bookingId === lastLoadedId.current) {
+      console.log(`[DEBUG] CheckoutPageContent: Skipping loadBooking (already tried or loading)`);
+      return;
     }
-  }, [booking, router]);
+    
+    // If bookingId is in URL but no booking in context, load it
+    if (bookingId && !booking && !isLoading && !error) {
+      console.log(`[DEBUG] CheckoutPageContent: Triggering loadBooking(${bookingId})`);
+      lastLoadedId.current = bookingId;
+      loadBooking(bookingId);
+    }
+    // Redirect to events if no booking and no bookingId
+    else if (!bookingId && !booking && !isLoading && !error) {
+      console.log(`[DEBUG] CheckoutPageContent: No ID and no booking, redirecting to events`);
+      router.push('/events');
+    }
+  }, [booking, bookingId, isLoading, loadBooking, router, error]);
 
   const handleConfirmPayment = async () => {
     try {
@@ -41,12 +64,33 @@ export default function CheckoutPageContent() {
     }
   };
 
-  if (!booking) {
+  if (error) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <span className="material-symbols-outlined text-red-500 text-6xl mb-4">
+            error
+          </span>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Đã xảy ra lỗi</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button 
+            onClick={() => router.push('/drafts')}
+            className="px-6 py-3 bg-purple-600 text-white rounded-full font-bold hover:bg-purple-700 transition-colors"
+          >
+            Quay lại trang nháp
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!booking || isLoading) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin h-12 w-12 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-600">Đang tải thông tin thanh toán...</p>
+          {bookingId && <p className="text-xs text-gray-400 mt-2">ID: {bookingId}</p>}
         </div>
       </main>
     );
@@ -76,7 +120,7 @@ export default function CheckoutPageContent() {
           {/* Left Side: Event Info & Payment Methods */}
           <div className="lg:col-span-8 space-y-8">
             {/* Event Information Card */}
-            <EventInfoCard />
+            <EventInfoCard event={event} booking={booking} seatNames={seatNames} />
 
             {/* Payment Methods */}
             <PaymentMethods />

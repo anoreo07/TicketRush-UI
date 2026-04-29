@@ -8,24 +8,17 @@ import { formatCurrency } from '@/lib/mock/booking-data';
 const SERVICE_FEE = 45000;
 
 export const CheckoutSummary = () => {
-  const { booking, selectedSeats, isLoading, error, confirmBooking: confirmBookingAPI } = useBookingContext();
+  const { booking, selectedSeats, isLoading, error, timeLeft, confirmBooking: confirmBookingAPI } = useBookingContext();
   const router = useRouter();
 
-  // Countdown: booking expires_at
-  const [timeLeft, setTimeLeft] = useState('10:00');
-  useEffect(() => {
-    if (!booking?.expires_at) return;
-    const expiresAt = new Date(booking.expires_at).getTime();
-    const tick = () => {
-      const diff = Math.max(0, expiresAt - Date.now());
-      const mm = String(Math.floor(diff / 60000)).padStart(2, '0');
-      const ss = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-      setTimeLeft(`${mm}:${ss}`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [booking?.expires_at]);
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return '--:--';
+    const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const ss = String(seconds % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
+  };
+
+  const timeStr = formatTime(timeLeft);
 
   const subtotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
   const vat = Math.round((subtotal + SERVICE_FEE) * 0.1);
@@ -43,10 +36,10 @@ export const CheckoutSummary = () => {
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
         <h2 className="text-lg font-bold text-slate-800">Tóm tắt đơn hàng</h2>
         <div className={`flex items-center gap-1.5 font-bold text-sm ${
-          timeLeft <= '02:00' ? 'text-red-500' : 'text-amber-500'
+          timeLeft !== null && timeLeft <= 120 ? 'text-red-500' : 'text-amber-500'
         }`}>
           <span className="material-symbols-outlined text-base">schedule</span>
-          <span>{booking ? timeLeft : '—'}</span>
+          <span>{booking ? timeStr : '—'}</span>
         </div>
       </div>
 
