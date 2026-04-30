@@ -97,7 +97,7 @@ export default function CheckoutPageContent() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50" style={{ zoom: 0.85 }}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
         {/* Progress Stepper */}
         <ProgressStepper currentStep={2} steps={['Chọn vé', 'Thanh toán', 'Hoàn tất']} />

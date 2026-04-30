@@ -9,6 +9,7 @@ import React from 'react';
 import { Event } from '@/lib/api/events';
 import { useEventBooking } from '@/lib/context/EventBookingContext';
 import { useRouter } from 'next/navigation';
+import { getCategoryLabel } from '@/lib/utils';
 
 interface EventCardProps {
   event: Event;
@@ -51,14 +52,23 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
       className="group cursor-pointer rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white hover:translate-y-[-4px] disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {/* Event Image */}
-      <div className="relative overflow-hidden h-48 md:h-56 bg-gray-200">
+      <div className="relative h-64 overflow-hidden rounded-t-[32px] group-hover:rounded-[32px] transition-all duration-500">
         <img
-          src={event.image_url}
           alt={event.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
+          src={event.banner_url || event.image_url || "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80"}
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
 
-        {/* Status Badge */}
+        {/* Status & Category Badges */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
+          {event.category && (
+            <span className="inline-block bg-purple-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              {getCategoryLabel(event.category)}
+            </span>
+          )}
+        </div>
+
         <div className="absolute top-4 right-4">
           {soldOut ? (
             <span className="inline-block bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">

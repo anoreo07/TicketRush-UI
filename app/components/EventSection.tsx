@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import EventCard from "./EventCard";
 import { ChevronRight } from "lucide-react";
-import { eventsApi, Event } from "@/lib/api";
+import { eventsApi, Event } from "@/lib/api/events";
+import { getCategoryLabel } from "@/lib/utils";
 
 export default function EventSection() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -17,10 +18,11 @@ export default function EventSection() {
         setError(null);
         const response = await eventsApi.getAll({
           page: 1,
-          limit: 4,
+          limit: 8,
           status: 'published',
         });
-        setEvents(response.data || []);
+        const eventsList = Array.isArray(response) ? response : (response?.data || []);
+        setEvents(eventsList);
       } catch (err: any) {
         console.error('Failed to fetch events:', err);
         setError(err?.message || 'Không thể tải sự kiện');
@@ -60,7 +62,7 @@ export default function EventSection() {
       <div className="flex justify-between items-end mb-6">
         <div>
           <h2 className="text-2xl font-black tracking-tight text-gray-900">
-            Sự kiện nổi bật
+            Sự kiện mới nhất
           </h2>
           <div className="h-1 w-10 bg-[#5700bf] mt-2 rounded-full"></div>
         </div>
@@ -76,12 +78,12 @@ export default function EventSection() {
           <EventCard
             key={event.id}
             eventId={event.id}
-            category={event.status}
+            category={getCategoryLabel(event.category)}
             title={event.title}
-            date={new Date(event.event_date).toLocaleString('vi-VN')}
+            date={new Date(event.event_date).toLocaleDateString('vi-VN')}
             location={event.venue || event.location}
             price={event.price_range ? `Từ ${event.price_range.min.toLocaleString()}đ` : 'Chưa xác định'}
-            image={event.image_url}
+            image={event.banner_url || event.image_url || "https://images.unsplash.com/photo-1540039155733-d7696d4eb98e?auto=format&fit=crop&q=80"}
           />
         ))}
       </div>

@@ -16,6 +16,8 @@ export interface Event {
   location: string;
   venue: string;
   image_url: string;
+  banner_url?: string;
+  category?: string;
   price_range?: {
     min: number;
     max: number;
@@ -28,7 +30,6 @@ export interface Event {
 }
 
 export interface EventDetail extends Event {
-  categories: string[];
   organizer: {
     id: string;
     name: string;
@@ -180,6 +181,8 @@ export const adminEventsApi = {
     description: string;
     start_time: string;
     location: string;
+    category?: string;
+    banner_url?: string;
     matrix_config: {
       total_rows: number;
       total_cols: number;
@@ -198,6 +201,16 @@ export const adminEventsApi = {
   update: (eventId: string, payload: Partial<Event>) =>
     apiAuthFetch<Event>(`/events/admin/${eventId}`, {
       method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  /**
+   * Tải ảnh banner (chỉ Admin)
+   * POST /api/v1/events/admin/upload-banner
+   */
+  uploadBanner: (payload: { fileName: string, mimeType: string, base64: string }) =>
+    apiAuthFetch<{ url: string }>('/events/admin/upload-banner', {
+      method: 'POST',
       body: JSON.stringify(payload),
     }),
 

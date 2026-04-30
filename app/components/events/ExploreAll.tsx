@@ -39,7 +39,7 @@ export default function ExploreAll({ events }: ExploreAllProps) {
   );
 }
 
-function ExploreCard({ event }: { event: any }) {
+export function ExploreCard({ event }: { event: any }) {
   const image = (event as any).image_url || (event as any).image || 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop';
   const price = (event as any).price_range?.min || (event as any).price?.min || 0;
   const priceDisplay = price > 0 ? `${(price / 1000000).toFixed(0)}k` : 'Miễn phí';

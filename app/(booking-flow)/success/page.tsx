@@ -32,10 +32,25 @@ const SuccessContent = () => {
 
         // Fetch event details from the first ticket's booking
         const firstTicket = ticketsToDisplay[0] as any;
-        const eventId = firstTicket?.bookings?.event_id;
-        if (eventId) {
-          const eventData = await eventsApi.getById(eventId);
+        const eventData = firstTicket?.bookings?.events;
+        
+        if (eventData) {
           setEvent(eventData);
+
+          // Add to notifications
+          const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+          if (!notifications.find((n: any) => n.bookingId === bookingId)) {
+            const newNotification = {
+              id: Date.now(),
+              bookingId: bookingId,
+              message: `Thanh toán thành công vé sự kiện ${eventData.title}!`,
+              read: false,
+              date: new Date().toISOString()
+            };
+            notifications.unshift(newNotification);
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            window.dispatchEvent(new Event('storage'));
+          }
         }
       } catch (error) {
         console.error('Failed to fetch booking details:', error);
@@ -75,7 +90,7 @@ const SuccessContent = () => {
     <div className="bg-surface font-body text-on-surface antialiased min-h-screen flex flex-col">
       <TopNavBar />
 
-      <main className="flex-grow py-16 px-4 flex flex-col items-center pt-24">
+      <main className="flex-grow py-16 px-4 flex flex-col items-center pt-24" style={{ zoom: 0.85 }}>
         {/* Success Animation Wrapper */}
         <div className="flex flex-col items-center text-center max-w-2xl mb-12 animate-fade-in-up">
           <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-tr from-primary to-tertiary flex items-center justify-center shadow-xl shadow-primary/20 relative">

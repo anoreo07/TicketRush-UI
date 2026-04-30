@@ -106,7 +106,7 @@ export default function DraftsPage() {
     <div className="bg-surface min-h-screen flex flex-col font-body">
       <TopNavBar />
       
-      <main className="flex-grow max-w-7xl mx-auto px-6 py-12 w-full pt-24">
+      <main className="flex-grow max-w-7xl mx-auto px-6 py-12 w-full pt-24" style={{ zoom: 0.85 }}>
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl font-black text-primary mb-2 font-headline tracking-tight">Đơn hàng nháp</h1>

@@ -18,10 +18,30 @@ export default function CreateEventPage() {
   const [startTime, setStartTime] = useState("");
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
+  const [category, setCategory] = useState("music");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
+
+  const CATEGORIES = [
+    { value: 'music', label: 'Âm nhạc' },
+    { value: 'arts', label: 'Nghệ thuật' },
+    { value: 'sports', label: 'Thể thao' },
+    { value: 'technology', label: 'Công nghệ' }
+  ];
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      // Create local preview URL
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
 
   // Check permission when user data is available
   useEffect(() => {
@@ -80,11 +100,43 @@ export default function CreateEventPage() {
       setLoading(true);
       setError(null);
 
+      let banner_url = undefined;
+
+      // Upload image if selected
+      if (imageFile) {
+        try {
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+          });
+          reader.readAsDataURL(imageFile);
+          const base64 = await base64Promise;
+
+          const uploadRes = await adminEventsApi.uploadBanner({
+            fileName: imageFile.name,
+            mimeType: imageFile.type,
+            base64: base64
+          });
+
+          if (uploadRes?.url) {
+            banner_url = uploadRes.url;
+          }
+        } catch (uploadErr) {
+          console.error("Lỗi khi upload ảnh:", uploadErr);
+          setError("Tải ảnh thất bại. Vui lòng thử lại.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const payload = {
         title: eventName,
         description: description,
         start_time: new Date(startTime).toISOString(),
         location: location,
+        category: category,
+        banner_url: banner_url,
         matrix_config: {
           total_rows: rows,
           total_cols: cols,
@@ -98,12 +150,8 @@ export default function CreateEventPage() {
       console.log("📥 Response:", response);
 
       if (response?.id) {
-        setSuccess(true);
-        console.log("✅ Event created successfully, redirecting...");
-        // Redirect to events page after 1 second
-        setTimeout(() => {
-          router.push("/events");
-        }, 1000);
+        setShowSuccessModal(true);
+        console.log("✅ Event created successfully, waiting for admin approval...");
       } else {
         setError("Không thể tạo sự kiện. Vui lòng thử lại.");
       }
@@ -152,18 +200,7 @@ export default function CreateEventPage() {
           </div>
         )}
 
-        {/* Success Message */}
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-            <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-            </svg>
-            <div className="flex-1">
-              <p className="text-green-800 font-medium" style={{ fontFamily: "Manrope" }}>Thành công</p>
-              <p className="text-green-700 text-sm" style={{ fontFamily: "Be Vietnam Pro" }}>Sự kiện đã được tạo! Đang chuyển hướng...</p>
-            </div>
-          </div>
-        )}
+
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT COLUMN: Form */}
@@ -203,43 +240,42 @@ export default function CreateEventPage() {
                     style={{ fontFamily: "Be Vietnam Pro" }}
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
+                    Thời gian bắt đầu
+                  </label>
+                  <input
+                    className="w-full px-4 py-3 rounded-lg border-none bg-[#eceef0] focus:ring-2 focus:ring-[#301ec9] transition-all text-[#191c1e]"
+                    type="datetime-local"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    style={{ fontFamily: "Be Vietnam Pro" }}
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
-                      Thời gian bắt đầu
+                      Thể loại
                     </label>
-                    <input
-                      className="w-full px-4 py-3 rounded-lg border-none bg-[#eceef0] focus:ring-2 focus:ring-[#301ec9] transition-all text-[#191c1e]"
-                      type="datetime-local"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
+                    <select
+                      className="w-full px-4 py-3 rounded-lg border-none bg-[#eceef0] focus:ring-2 focus:ring-[#301ec9] transition-all text-[#191c1e] appearance-none"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      style={{ fontFamily: "Be Vietnam Pro" }}
+                    >
+                      {CATEGORIES.map(cat => (
+                        <option key={cat.value} value={cat.value}>{cat.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
-                      Giá vé cơ bản (VNĐ)
+                      Địa điểm
                     </label>
                     <input
                       className="w-full px-4 py-3 rounded-lg border-none bg-[#eceef0] focus:ring-2 focus:ring-[#301ec9] transition-all text-[#191c1e]"
-                      placeholder="500,000"
-                      type="number"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      style={{ fontFamily: "Be Vietnam Pro" }}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
-                    Địa điểm
-                  </label>
-                  <div className="flex gap-2 relative">
-                    <svg className="w-5 h-5 text-slate-400 absolute mt-3 ml-3" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-                    </svg>
-                    <input
-                      className="w-full pl-10 pr-4 py-3 rounded-lg border-none bg-[#eceef0] focus:ring-2 focus:ring-[#301ec9] transition-all text-[#191c1e]"
-                      placeholder="Nhà hát Lớn Hà Nội, số 1 Tràng Tiền..."
+                      placeholder="Ví dụ: Nhà hát lớn Hà Nội"
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
@@ -247,22 +283,38 @@ export default function CreateEventPage() {
                     />
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
-                    Banner sự kiện
+                    Ảnh bìa (Banner)
                   </label>
-                  <div className="border-2 border-dashed border-[#c9c4d7] rounded-xl p-8 text-center hover:border-[#301ec9] transition-colors group cursor-pointer bg-[#f7f9fb]">
-                    <svg className="w-12 h-12 text-[#797586] mx-auto mb-2 group-hover:text-[#301ec9] transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                    </svg>
-                    <p className="text-sm text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
-                      Kéo thả hoặc{" "}
-                      <span className="text-[#301ec9] font-bold">tải ảnh lên</span>
-                    </p>
-                    <p className="text-xs text-[#797586] mt-1" style={{ fontFamily: "Be Vietnam Pro" }}>
-                      Kích thước khuyên dùng: 1920x1080px (Tối đa 5MB)
-                    </p>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-[#d1d5db] rounded-lg bg-[#eceef0] hover:bg-[#e5e7eb] transition-colors relative cursor-pointer" onClick={() => document.getElementById('file-upload')?.click()}>
+                    <div className="space-y-1 text-center">
+                      <svg className="mx-auto h-12 w-12 text-[#9ca3af]" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <div className="flex text-sm text-[#484554] justify-center">
+                        <label htmlFor="file-upload" className="relative cursor-pointer bg-transparent rounded-md font-medium text-[#301ec9] hover:text-[#25159c] focus-within:outline-none">
+                          <span style={{ fontFamily: "Be Vietnam Pro" }}>{imageFile ? imageFile.name : 'Tải ảnh lên'}</span>
+                          <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
+                        </label>
+                      </div>
+                      <p className="text-xs text-[#6b7280]" style={{ fontFamily: "Be Vietnam Pro" }}>PNG, JPG, GIF up to 10MB</p>
+                    </div>
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-[#484554]" style={{ fontFamily: "Be Vietnam Pro" }}>
+                    Giá vé cơ bản (VNĐ)
+                  </label>
+                  <input
+                    className="w-full px-4 py-3 rounded-lg border-none bg-[#eceef0] focus:ring-2 focus:ring-[#301ec9] transition-all text-[#191c1e]"
+                    placeholder="500,000"
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    style={{ fontFamily: "Be Vietnam Pro" }}
+                  />
                 </div>
               </div>
             </section>
@@ -381,14 +433,12 @@ export default function CreateEventPage() {
             <div className="group relative bg-white rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(48,30,201,0.08)] transition-all">
               <div className="aspect-[16/10] overflow-hidden relative">
                 <img
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPnWgTrIH6iMBoeN-PXMMcyrWDQzz6rS7sKb063EYuV3bPkFDSfhknR4lgkWMzzdQwjXwDqu2AYZ8LyR1DWwjiJsWhvEcVhn6sScQDH9PNiZ6D83zJqJeDMl4cPzMxfHA1GFSrBfdczBkwlIn6GYOgRoom7_ciYbHVErgNMCbTRQYLpib7DhZ6uoF-Iput68U49B0Dd_C-7Oxjval3tkTcrx1MPXIuP_jPIgkzUAArc4R5wTBmh9X5-6JZL59UKtSKCkiGQVJ7prU"
-                  alt="Event preview"
+                  alt="Event Preview"
+                  className="w-full h-full object-cover"
+                  src={imagePreview || "/logo.png"}
                 />
-                <div className="absolute top-4 left-4">
-                  <span className="bg-white/90 backdrop-blur-md text-[#301ec9] text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-tighter shadow-sm" style={{ fontFamily: "Be Vietnam Pro" }}>
-                    Âm nhạc
-                  </span>
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-bold text-[#301ec9] shadow-sm">
+                  {CATEGORIES.find(c => c.value === category)?.label || category}
                 </div>
                 <div className="absolute bottom-4 right-4 bg-[#5700bf] text-white px-4 py-2 rounded-xl text-sm font-bold shadow-xl" style={{ fontFamily: "Manrope" }}>
                   Từ {price ? `${price}đ` : "500,000đ"}
@@ -482,6 +532,51 @@ export default function CreateEventPage() {
               >
                 OK
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#191c1e]/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-[40px] p-10 max-w-lg w-full shadow-2xl border border-white/20 animate-scale-in relative overflow-hidden">
+            {/* Background Decorative Element */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-50 rounded-full blur-3xl opacity-50"></div>
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+
+            <div className="relative z-10">
+              <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-500/20">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+
+              <h3 className="text-3xl font-black text-center text-[#191c1e] mb-4 leading-tight" style={{ fontFamily: "Manrope" }}>
+                Tạo sự kiện thành công!
+              </h3>
+
+              <div className="bg-indigo-50/50 rounded-2xl p-6 mb-8 border border-indigo-100/50">
+                <p className="text-center text-[#484554] leading-relaxed font-medium" style={{ fontFamily: "Be Vietnam Pro" }}>
+                  Sự kiện <span className="text-[#301ec9] font-bold">"{eventName}"</span> của bạn đã được gửi hệ thống và đang <span className="text-[#301ec9] font-bold">chờ Admin phê duyệt</span>.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <button
+                  onClick={() => router.push('/events')}
+                  className="w-full bg-[#301ec9] text-white font-black py-4 rounded-full shadow-lg shadow-[#301ec9]/20 hover:opacity-90 hover:translate-y-[-2px] transition-all active:scale-95"
+                  style={{ fontFamily: "Manrope" }}
+                >
+                  Về trang danh sách
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="w-full bg-white text-[#484554] font-bold py-4 rounded-full border-2 border-[#eceef0] hover:bg-[#eceef0] transition-all active:scale-95"
+                  style={{ fontFamily: "Manrope" }}
+                >
+                  Quản lý Dashboard
+                </button>
+              </div>
             </div>
           </div>
         </div>

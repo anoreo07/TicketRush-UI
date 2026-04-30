@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
         // Load tickets
         try {
-          const ticketsData = await bookingApi.getUserTickets();
+          const ticketsData = await bookingApi.getMyTickets();
           setTickets(ticketsData || []);
         } catch (ticketErr) {
           console.warn('Failed to load tickets:', ticketErr);
@@ -231,54 +231,77 @@ export default function ProfilePage() {
                 </a>
               </div>
 
-              <div className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50 flex flex-col md:flex-row group hover:shadow-xl transition-all duration-500">
-                <div className="md:w-72 h-56 md:h-auto overflow-hidden relative">
-                  <img
-                    alt="Event"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80"
-                  />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                </div>
-
-                <div className="flex-1 p-8 flex flex-col justify-between">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="px-3 py-1 rounded-full text-[9px] font-black bg-indigo-100 text-indigo-600 uppercase tracking-widest">
-                      ĐÃ THANH TOÁN
-                    </span>
-                    <span className="text-slate-400 text-xs font-bold tracking-tighter">#TR-882910</span>
+              <div className="space-y-6">
+                {tickets.length === 0 ? (
+                  <div className="bg-white rounded-[32px] p-8 text-center text-slate-400 border border-slate-50 shadow-sm">
+                    <span className="material-symbols-outlined text-4xl mb-2 opacity-50">confirmation_number</span>
+                    <p className="text-sm">Bạn chưa mua vé nào.</p>
                   </div>
+                ) : (
+                  tickets.map((ticket: any) => {
+                    const event = ticket.bookings?.events;
+                    const seat = ticket.seats;
+                    
+                    return (
+                      <div key={ticket.id} className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50 flex flex-col md:flex-row group hover:shadow-xl transition-all duration-500">
+                        <div className="md:w-72 h-56 md:h-auto overflow-hidden relative">
+                          <img
+                            alt="Event"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            src={event?.image_url || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80"}
+                          />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
 
-                  <h3 className="text-xl font-black font-headline text-slate-800 mb-4 group-hover:text-primary transition-colors">
-                    Sky Tour: Mùa hè rực rỡ 2024
-                  </h3>
+                        <div className="flex-1 p-8 flex flex-col justify-between">
+                          <div className="flex justify-between items-start mb-4">
+                            <span className="px-3 py-1 rounded-full text-[9px] font-black bg-indigo-100 text-indigo-600 uppercase tracking-widest">
+                              ĐÃ THANH TOÁN
+                            </span>
+                            <span className="text-slate-400 text-xs font-bold tracking-tighter">
+                              #{ticket.booking_id ? ticket.booking_id.substring(0,8).toUpperCase() : 'TR-UNKNOWN'}
+                            </span>
+                          </div>
 
-                  <div className="space-y-2 text-sm text-slate-500 font-medium">
-                    <p className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-slate-300">location_on</span>
-                      Sân vận động Mỹ Đình, Hà Nội
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-slate-300">schedule</span>
-                      20:00 • 15 tháng 07, 2024
-                    </p>
-                  </div>
+                          <h3 className="text-xl font-black font-headline text-slate-800 mb-4 group-hover:text-primary transition-colors">
+                            {event?.title || "Sự kiện chưa xác định"}
+                          </h3>
 
-                  <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-                    <div className="flex gap-2">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500">SV</div>
-                      <div className="px-3 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-black text-indigo-600">VIP</div>
-                    </div>
-                    <div className="flex gap-3">
-                      <button className="px-6 py-2.5 rounded-full bg-slate-50 text-slate-600 text-xs font-bold hover:bg-slate-100 transition-colors">
-                        Chi tiết
-                      </button>
-                      <button className="px-6 py-2.5 rounded-full bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all flex items-center gap-2">
-                        Tải vé (PDF)
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                          <div className="space-y-2 text-sm text-slate-500 font-medium">
+                            <p className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-base text-slate-300">location_on</span>
+                              {event?.location || "Chưa xác định"}
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-base text-slate-300">schedule</span>
+                              {event?.start_time ? new Date(event.start_time).toLocaleDateString('vi-VN', {
+                                hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'long', year: 'numeric'
+                              }) : "Chưa xác định"}
+                            </p>
+                          </div>
+
+                          <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+                            <div className="flex gap-2">
+                              {seat && (
+                                <div className="px-3 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-600">
+                                  Hàng {seat.row_index + 1} - Ghế {seat.col_index + 1}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-3">
+                              <button className="px-6 py-2.5 rounded-full bg-slate-50 text-slate-600 text-xs font-bold hover:bg-slate-100 transition-colors">
+                                Chi tiết
+                              </button>
+                              <button className="px-6 py-2.5 rounded-full bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all flex items-center gap-2">
+                                Tải vé (PDF)
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </section>
 

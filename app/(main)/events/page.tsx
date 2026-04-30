@@ -5,20 +5,32 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import TopNavBar from '@/app/components/TopNavBar';
 import CategoryFilter from '@/app/components/events/CategoryFilter';
 import FeaturedEvent from '@/app/components/events/FeaturedEvent';
 import PersonalizedSection from '@/app/components/events/PersonalizedSection';
 import DealsSection from '@/app/components/events/DealsSection';
-import ExploreAll from '@/app/components/events/ExploreAll';
+import ExploreAll, { ExploreCard } from '@/app/components/events/ExploreAll';
 import { eventsApi, Event } from '@/lib/api/events';
 
-export default function EventsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+function EventsPageContent() {
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get('category') || 'all';
+  const urlSearch = searchParams.get('search') || '';
+
+  const [selectedCategory, setSelectedCategory] = useState(urlCategory);
+  const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync with URL params if they change
+  useEffect(() => {
+    setSelectedCategory(urlCategory);
+    setSearchQuery(urlSearch);
+  }, [urlCategory, urlSearch]);
 
   // Fetch events from API
   useEffect(() => {
@@ -26,15 +38,15 @@ export default function EventsPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await eventsApi.getAll({ page: 1, limit: 12 });
-        console.log('📡 API Response:', response);
-        console.log('📡 response.data:', response.data);
-        console.log('📡 typeof response:', typeof response);
-        console.log('📡 Array.isArray(response):', Array.isArray(response));
+        const response = await eventsApi.getAll({ 
+          page: 1, 
+          limit: 12,
+          category: selectedCategory === 'all' ? undefined : selectedCategory,
+          search: searchQuery || undefined
+        });
         
         // Handle both cases: if response is array directly or has .data property
         const eventsList = Array.isArray(response) ? response : (response?.data || []);
-        console.log('📡 Setting events to:', eventsList);
         setEvents(eventsList);
       } catch (err) {
         console.error('Failed to fetch events:', err);
@@ -45,7 +57,7 @@ export default function EventsPage() {
     };
 
     fetchEvents();
-  }, []);
+  }, [selectedCategory, searchQuery]);
 
   const filteredEvents = events.length > 0 ? events : [];
   const featuredEvent = filteredEvents[0];
@@ -84,7 +96,7 @@ export default function EventsPage() {
           <div>
             <h1 className="text-5xl font-black text-indigo-600 mb-2">Sự kiện</h1>
             <p className="text-gray-600 text-base">
-              Khám phá những trải nghiệm đẳng cấp dành riêng cho bạn.
+              {searchQuery ? `Kết quả tìm kiếm cho "${searchQuery}"` : 'Khám phá những trải nghiệm đẳng cấp dành riêng cho bạn.'}
             </p>
           </div>
 
@@ -107,24 +119,53 @@ export default function EventsPage() {
           </div>
         ) : filteredEvents.length > 0 ? (
           <>
-            {/* Featured Event */}
-            <FeaturedEvent event={featuredEvent} />
+            {/* Featured Event - Hide if searching */}
+            {!searchQuery && featuredEvent && <FeaturedEvent event={featuredEvent} />}
 
-            {/* Personalized */}
-            <PersonalizedSection events={filteredEvents} />
-
-            {/* Deals */}
-            <DealsSection events={filteredEvents} />
-
-            {/* Explore All */}
-            <ExploreAll events={filteredEvents} />
+            {/* Main Content Grid */}
+            <div className="space-y-16">
+               {searchQuery ? (
+                 <section className="space-y-8">
+                    <h3 className="text-2xl font-bold text-gray-900">Tìm thấy {filteredEvents.length} sự kiện</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {filteredEvents.map((event) => (
+                        <ExploreCard key={event.id} event={event} />
+                      ))}
+                    </div>
+                 </section>
+               ) : (
+                 <>
+                   <PersonalizedSection events={filteredEvents} />
+                   <DealsSection events={filteredEvents} />
+                   <ExploreAll events={filteredEvents} />
+                 </>
+               )}
+            </div>
           </>
         ) : (
           <div className="text-center py-20">
-            <p className="text-gray-600">Không có sự kiện nào</p>
+            <p className="text-gray-600 text-xl font-medium">Không tìm thấy sự kiện nào khớp với yêu cầu của bạn.</p>
+            <button 
+              onClick={() => {
+                setSelectedCategory('all');
+                setSearchQuery('');
+                window.history.pushState({}, '', '/events');
+              }}
+              className="mt-4 text-indigo-600 font-bold hover:underline"
+            >
+              Xem tất cả sự kiện
+            </button>
           </div>
         )}
       </main>
     </div>
+  );
+}
+
+export default function EventsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 animate-pulse" />}>
+      <EventsPageContent />
+    </Suspense>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { eventsApi, Event } from "@/lib/api";
+import { eventsApi, Event } from "@/lib/api/events";
+import { getCategoryLabel } from "@/lib/utils";
 
 export default function RecommendedCarousel() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -16,10 +17,11 @@ export default function RecommendedCarousel() {
         setError(null);
         const response = await eventsApi.getAll({
           page: 1,
-          limit: 3,
+          limit: 6,
           status: 'published',
         });
-        setEvents(response.data || []);
+        const eventsList = Array.isArray(response) ? response : (response?.data || []);
+        setEvents(eventsList);
       } catch (err: any) {
         console.error('Failed to fetch recommended events:', err);
         setError(err?.message || 'Không thể tải gợi ý sự kiện');
@@ -37,29 +39,22 @@ export default function RecommendedCarousel() {
       category: "ÂM NHẠC INDIE",
       location: "Mây Lang Thang, Đà Lạt",
       image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuAL_4q5F6H8J9K0L1M2N3O4P5Q6R7S8T9U0V1W2X3Y4Z5",
+        "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80",
     },
     {
       title: "Lễ hội Taste of Vietnam",
       category: "ẨM THỰC",
       location: "Công viên Lê Văn Tám",
       image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuB1C2D3E4F5G6H7I8J9K0L1M2N3O4P5Q6R7S8T9U0V1",
-    },
-    {
-      title: "V-League Round 12",
-      category: "THỂ THAO",
-      location: "SVĐ Hàng Đẫy",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuW1X2Y3Z4A5B6C7D8E9F0G1H2I3J4K5L6M7N8O9P0",
+        "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
     },
   ];
 
   const recommendations = events.length > 0 ? events.map((event) => ({
     title: event.title,
-    category: "SỰ KIỆN NỔI BẬT",
+    category: getCategoryLabel(event.category).toUpperCase(),
     location: event.venue || event.location || "Chưa cập nhật địa điểm",
-    image: event.image_url || "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop",
+    image: event.banner_url || event.image_url || "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop",
   })) : fallbackRecommendations;
 
   return (

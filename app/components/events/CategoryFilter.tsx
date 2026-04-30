@@ -14,9 +14,9 @@ interface CategoryFilterProps {
 const categories = [
   { id: 'all', label: 'Tất cả' },
   { id: 'music', label: 'Âm nhạc' },
-  { id: 'art', label: 'Nghệ thuật' },
+  { id: 'arts', label: 'Nghệ thuật' },
   { id: 'sports', label: 'Thể thao' },
-  { id: 'tech', label: 'Công nghệ' },
+  { id: 'technology', label: 'Công nghệ' },
 ];
 
 export default function CategoryFilter({

@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useEventBooking } from '@/lib/context/EventBookingContext';
 import TopNavBar from '@/app/components/TopNavBar';
 import { useRouter } from 'next/navigation';
+import { getCategoryLabel } from '@/lib/utils';
 
 interface EventDetailContentProps {
   eventId: string;
@@ -38,7 +39,7 @@ export const EventDetailContent: React.FC<EventDetailContentProps> = ({ eventId 
     return (
       <div className="min-h-screen bg-white">
         <TopNavBar />
-        <main className="pt-28 pb-20 px-4 md:px-8 max-w-7xl mx-auto animate-pulse">
+        <main className="pt-28 pb-20 px-4 md:px-8 max-w-7xl mx-auto animate-pulse" style={{ zoom: 0.85 }}>
           <div className="h-96 bg-slate-100 rounded-[2rem]" />
         </main>
       </div>
@@ -54,13 +55,20 @@ export const EventDetailContent: React.FC<EventDetailContentProps> = ({ eventId 
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-indigo-100">
       <TopNavBar />
 
-      <main className="pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
+      <main className="pt-10 pb-20 px-2 md:px-8 max-w-7xl mx-auto" style={{ zoom: 0.85 }}>
         {/* --- HERO SECTION --- */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20 p-10 rounded-[2rem] bg-gradient-to-br from-[#5842F4]/10 via-[#5842F4]/5 to-transparent border border-[#5842F4]/10">
           <div className="lg:col-span-5 space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider">
-              <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
-              Đang mở bán
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider">
+                <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
+                Đang mở bán
+              </div>
+              {currentEvent.category && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold uppercase tracking-wider">
+                  {getCategoryLabel(currentEvent.category)}
+                </div>
+              )}
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
@@ -124,11 +132,11 @@ export const EventDetailContent: React.FC<EventDetailContentProps> = ({ eventId 
 
           {/* Event Image */}
           <div className="lg:col-span-7">
-            <div className="relative rounded-[2.5rem] overflow-hidden aspect-[16/10] shadow-2xl shadow-indigo-100 group">
+            <div className="relative w-full aspect-[4/3] md:aspect-[16/10] rounded-[2rem] overflow-hidden shadow-2xl">
               <img
                 alt={currentEvent.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                src={currentEvent.image_url}
+                className="w-full h-full object-cover"
+                src={currentEvent.banner_url || currentEvent.image_url || "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80"}
               />
               <div className="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-[2.5rem]"></div>
             </div>

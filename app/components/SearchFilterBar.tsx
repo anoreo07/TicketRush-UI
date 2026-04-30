@@ -1,10 +1,25 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Calendar, Filter, ArrowRight } from "lucide-react";
 
 export default function SearchFilterBar() {
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [category, setCategory] = useState("all");
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchTerm.trim()) params.append("search", searchTerm.trim());
+    if (category !== "all") params.append("category", category);
+    
+    const query = params.toString();
+    router.push(`/events${query ? '?' + query : ''}`);
+  };
+
   return (
     <section className="mb-12 -mt-20 relative z-10 px-8">
       <div className="max-w-7xl mx-auto">
@@ -19,6 +34,9 @@ export default function SearchFilterBar() {
                 className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#301ec9]/20 text-sm font-medium placeholder:text-gray-400"
                 placeholder="Tên nghệ sĩ, sự kiện..."
                 type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
           </div>
@@ -41,15 +59,23 @@ export default function SearchFilterBar() {
             </label>
             <div className="relative">
               <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
-              <select className="w-full pl-11 pr-3 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#301ec9]/20 text-sm font-medium appearance-none cursor-pointer">
-                <option>Mọi thể loại</option>
-                <option>Âm nhạc</option>
-                <option>Nghệ thuật</option>
-                <option>Workshop</option>
+              <select 
+                className="w-full pl-11 pr-3 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#301ec9]/20 text-sm font-medium appearance-none cursor-pointer"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="all">Mọi thể loại</option>
+                <option value="music">Âm nhạc</option>
+                <option value="arts">Nghệ thuật</option>
+                <option value="sports">Thể thao</option>
+                <option value="technology">Công nghệ</option>
               </select>
             </div>
           </div>
-          <Button className="bg-[#301ec9] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#2818a0] transition-all flex items-center gap-2 group h-auto w-full md:w-auto">
+          <Button 
+            onClick={handleSearch}
+            className="bg-[#301ec9] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#2818a0] transition-all flex items-center gap-2 group h-auto w-full md:w-auto"
+          >
             Tìm kiếm
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Button>

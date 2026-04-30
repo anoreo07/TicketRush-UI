@@ -3,7 +3,6 @@ import HeroSection from "@/app/components/HeroSection";
 import SearchFilterBar from "@/app/components/SearchFilterBar";
 import EventSection from "@/app/components/EventSection";
 import RecommendedCarousel from "@/app/components/RecommendedCarousel";
-import EventSkeleton from "@/app/components/EventSkeleton";
 import Footer from "@/app/components/Footer";
 
 export default function Home() {
@@ -122,10 +121,6 @@ export default function Home() {
           
           <div className="animate-section" style={{ animationDelay: '0.6s' }}>
             <RecommendedCarousel />
-          </div>
-          
-          <div className="animate-section" style={{ animationDelay: '0.8s' }}>
-            <EventSkeleton />
           </div>
         </main>
       </div>
